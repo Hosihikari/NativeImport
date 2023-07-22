@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace NativeInterop;
 
@@ -8,6 +9,11 @@ public static class LibPreloader
 
     [DllImport(libname, EntryPoint = "hook", ExactSpelling = true)]
     public static extern unsafe int Hook(void* rva, void* hook, out void* org);
+
+    public static unsafe int Hook(int offset, void* hook, out void* org)
+    {
+        return Hook((MainHandleHandle + offset).ToPointer(), hook, out org);
+    }
 
     public static int Hook(nint rva, nint hook, out nint org)
     {
@@ -22,4 +28,17 @@ public static class LibPreloader
             return result;
         }
     }
+
+    public static int Hook(int offset, nint hook, out nint org)
+    {
+        return Hook(MainHandleHandle + offset, hook, out org);
+    }
+
+    private static readonly Lazy<nint> _handle =
+        new(() =>
+        {
+            var cp = Process.GetCurrentProcess();
+            return cp.MainModule!.BaseAddress;
+        });
+    public static nint MainHandleHandle => _handle.Value;
 }
