@@ -19,7 +19,7 @@ public static class SymbolHelper
     {
         if (SymbolTable.TryQuery(symbolName, out var offset))
         {
-            address = LibPreloader.MainHandleHandle + offset;
+            address = LibHook.MainHandleHandle + offset;
             return true;
         }
         address = default;
@@ -30,7 +30,7 @@ public static class SymbolHelper
     {
         if (SymbolTable.TryQuery(symbolName, out var offset))
         {
-            address = (LibPreloader.MainHandleHandle + offset).ToPointer();
+            address = (LibHook.MainHandleHandle + offset).ToPointer();
             return true;
         }
         address = default;
@@ -39,11 +39,11 @@ public static class SymbolHelper
 
     public static nint Dlsym(string symbolName)
     {
-        return SymbolTable.Query(symbolName) + LibPreloader.MainHandleHandle;
+        return SymbolTable.Query(symbolName) + LibHook.MainHandleHandle;
     }
 
     public static unsafe void* DlsymPointer(string symbolName)
     {
-        return (SymbolTable.Query(symbolName) + LibPreloader.MainHandleHandle).ToPointer();
+        return (SymbolTable.Query(symbolName) + LibHook.MainHandleHandle).ToPointer();
     }
 }
