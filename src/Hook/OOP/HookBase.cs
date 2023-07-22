@@ -1,0 +1,118 @@
+﻿using System.Runtime.InteropServices;
+using NativeInterop.LibLoader;
+
+namespace NativeInterop.Hook.OOP;
+
+public abstract class HookBase<TDelegate> : IHook
+    where TDelegate : Delegate
+{
+    protected HookBase(string symbol)
+        : this(SymbolHelper.Dlsym(symbol)) { }
+
+    protected HookBase(nint address)
+        : this()
+    {
+        unsafe
+        {
+            _address = address.ToPointer();
+        }
+    }
+
+    private HookBase()
+    {
+        _originalFuncInstance = new Lazy<TDelegate>(() =>
+        {
+            unsafe
+            {
+                if (_orgIntPtr is null)
+                    throw new NullReferenceException("OrgIntPtr is zero, has the hook installed ?");
+                return Marshal.GetDelegateForFunctionPointer<TDelegate>((nint)_orgIntPtr);
+            }
+        });
+        _hookedFuncInstance = new Lazy<TDelegate>(() =>
+        {
+            var hookedFunc = HookedFunc;
+            if (HookedFunc is null)
+                throw new NullReferenceException("HookedFunc");
+            return hookedFunc;
+        });
+    }
+
+    protected TDelegate Original => _originalFuncInstance.Value;
+    public abstract TDelegate HookedFunc { get; }
+    public bool HasInstalled
+    {
+        get
+        {
+            unsafe
+            {
+                return _orgIntPtr is not null;
+            }
+        }
+    }
+
+    private readonly unsafe void* _address;
+    private unsafe void* _orgIntPtr;
+    private readonly Lazy<TDelegate> _hookedFuncInstance;
+    private readonly Lazy<TDelegate> _originalFuncInstance;
+    private unsafe void* _hookedFuncPointer;
+
+    //alloc handle for delegate
+    private GCHandle? _handle = null;
+
+    private NativeFunc.HookInstance? _instance = null;
+
+    public void Install()
+    {
+        lock (this)
+        {
+            unsafe
+            {
+                if (_address is null)
+                    throw new NullReferenceException("Address or symbol is null.");
+                if (_orgIntPtr is not null || _handle is not null)
+                    throw new HookAlreadyInstalledException();
+                //save handle for delegate, prevent gc
+                _handle = GCHandle.Alloc(_hookedFuncInstance.Value);
+                //get pointer of delegate
+                _hookedFuncPointer = Marshal
+                    .GetFunctionPointerForDelegate(_hookedFuncInstance.Value)
+                    .ToPointer();
+                //hook and check if success, otherwise throw exception
+                if (
+                    NativeFunc.Hook(_address, _hookedFuncPointer, out _orgIntPtr, out _instance)
+                    is not HookResult.Success
+                        and var errCode
+                )
+                {
+                    throw new HookInstalledFailedException(errCode);
+                }
+            }
+        }
+    }
+
+    public void Uninstall()
+    {
+        lock (this)
+        {
+            unsafe
+            {
+                if (_orgIntPtr is null || _instance is null)
+                    throw new HookNotInstalledException();
+                //free delegate handle
+                _handle?.Free();
+                _handle = null;
+                //unhook and check if success, otherwise throw exception
+                if (_instance.Uninstall() is HookResult.Success and var errCode)
+                {
+                    throw new HookInstalledFailedException(errCode);
+                }
+                else
+                {
+                    _orgIntPtr = null;
+                    _instance = null;
+                }
+            }
+        }
+    }
+}
