@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace NativeInterop;
+namespace NativeInterop.LibLoader;
 
 public static class LibcHelper
 {
@@ -8,11 +8,11 @@ public static class LibcHelper
     const string libc = "libc";
 
     [DllImport(libc)]
-    public static extern IntPtr dlsym(IntPtr handle, string symbol);
+    public static extern nint dlsym(nint handle, string symbol);
 
     [DllImport(libc)]
-    public static extern IntPtr dlopen(string filename, int flags);
+    public static extern nint dlopen(string filename, int flags);
 
     [DllImport(libc)]
-    public static extern int dlclose(IntPtr handle);
+    public static extern int dlclose(nint handle);
 }

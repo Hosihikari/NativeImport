@@ -1,5 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using NativeInterop.Utils;
+﻿using NativeInterop.Utils;
 
 namespace NativeInterop.NativeTypes;
 

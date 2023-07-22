@@ -4,11 +4,22 @@ namespace NativeInterop.Utils;
 
 public static class StringUtils
 {
+    /// <summary>
+    /// Converts a string to a null-terminated UTF-8 byte array.
+    /// </summary>
+    /// <param name="s"> string data </param>
+    /// <returns>  null-terminated UTF-8 byte array </returns>
     public static byte[] StringToManagedUtf8(string s)
     {
         return StringToManagedUtf8(s, out _);
     }
 
+    /// <summary>
+    /// Converts a string to a null-terminated UTF-8 byte array.
+    /// </summary>
+    /// <param name="s"> string data </param>
+    /// <param name="length"> byte length </param>
+    /// <returns> null-terminated UTF-8 byte array </returns>
     public static unsafe byte[] StringToManagedUtf8(string? s, out int length)
     {
         if (string.IsNullOrEmpty(s))
