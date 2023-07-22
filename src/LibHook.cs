@@ -3,13 +3,23 @@ using System.Runtime.InteropServices;
 
 namespace NativeInterop;
 
-public static class LibPreloader
+public static class LibHook
 {
-    const string libname = "libpreloader";
+    #region MainHandleHandle
+    private static readonly Lazy<nint> _handle =
+        new(() =>
+        {
+            var cp = Process.GetCurrentProcess();
+            return cp.MainModule!.BaseAddress;
+        });
+    public static nint MainHandleHandle => _handle.Value;
+    #endregion
+    const string libname = "libhook";
 
     [DllImport(libname, EntryPoint = "hook", ExactSpelling = true)]
     public static extern unsafe int Hook(void* rva, void* hook, out void* org);
 
+    #region Hook Overload
     public static unsafe int Hook(int offset, void* hook, out void* org)
     {
         return Hook((MainHandleHandle + offset).ToPointer(), hook, out org);
@@ -34,11 +44,5 @@ public static class LibPreloader
         return Hook(MainHandleHandle + offset, hook, out org);
     }
 
-    private static readonly Lazy<nint> _handle =
-        new(() =>
-        {
-            var cp = Process.GetCurrentProcess();
-            return cp.MainModule!.BaseAddress;
-        });
-    public static nint MainHandleHandle => _handle.Value;
+    #endregion
 }
