@@ -7,4 +7,10 @@
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Reference Include="FastElfQuery">
+      <HintPath>..\..\FastElfQuery\src\bin\Release\net7.0\FastElfQuery.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>
