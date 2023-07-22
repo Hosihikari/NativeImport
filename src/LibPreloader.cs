@@ -2,14 +2,14 @@
 
 namespace Loader;
 
-internal static class LibPreloader
+public static class LibPreloader
 {
     const string libname = "libpreloader";
 
     [DllImport(libname, EntryPoint = "hook", ExactSpelling = true)]
-    internal static extern unsafe int Hook(void* rva, void* hook, out void* org);
+    public static extern unsafe int Hook(void* rva, void* hook, out void* org);
 
-    internal static int Hook(nint rva, nint hook, out nint org)
+    public static int Hook(nint rva, nint hook, out nint org)
     {
         if (rva == 0)
             throw new NullReferenceException(nameof(rva));
