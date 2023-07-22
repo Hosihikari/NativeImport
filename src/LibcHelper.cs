@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Loader;
+namespace NativeInterop;
 
 public static class LibcHelper
 {
