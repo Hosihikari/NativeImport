@@ -32,7 +32,7 @@ internal struct FuncHookT { }
 
 internal static class LibHook
 {
-    const string LibName = "libhook";
+    const string LibName = LibNative.LibName; //"libhook";
 
     [DllImport(LibName, EntryPoint = "hook", ExactSpelling = true)]
     internal static extern unsafe HookResult Hook(

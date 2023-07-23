@@ -13,7 +13,7 @@ public class StdString
     {
         unsafe
         {
-            _pointer = LibNative.std_string_new();
+            _pointer = LibLoader.LibNative.std_string_new();
             _isOwner = true;
         }
     }
@@ -22,7 +22,7 @@ public class StdString
     {
         fixed (byte* data = StringUtils.StringToManagedUtf8(str))
         {
-            _pointer = LibNative.std_string_new_str(data);
+            _pointer = LibLoader.LibNative.std_string_new_str(data);
             _isOwner = true;
         }
     }
@@ -45,7 +45,7 @@ public class StdString
         {
             if (_isOwner)
             {
-                LibNative.std_string_delete(_pointer);
+                LibLoader.LibNative.std_string_delete(_pointer);
             }
         }
     }
@@ -58,8 +58,8 @@ public class StdString
             unsafe
             {
                 return new ReadOnlySpan<byte>(
-                    LibNative.std_string_data(_pointer),
-                    LibNative.std_string_length(_pointer)
+                    LibLoader.LibNative.std_string_data(_pointer),
+                    LibLoader.LibNative.std_string_length(_pointer)
                 );
             }
         }
@@ -71,7 +71,7 @@ public class StdString
         {
             unsafe
             {
-                return LibNative.std_string_length(_pointer);
+                return LibLoader.LibNative.std_string_length(_pointer);
             }
         }
     }
@@ -82,7 +82,7 @@ public class StdString
         {
             fixed (byte* data = StringUtils.StringToManagedUtf8(str))
             {
-                LibNative.std_string_append(_pointer, data);
+                LibLoader.LibNative.std_string_append(_pointer, data);
             }
         }
     }
@@ -91,7 +91,7 @@ public class StdString
     {
         unsafe
         {
-            LibNative.std_string_append_std_string(_pointer, str._pointer);
+            LibLoader.LibNative.std_string_append_std_string(_pointer, str._pointer);
         }
     }
 
@@ -99,7 +99,7 @@ public class StdString
     {
         unsafe
         {
-            LibNative.std_string_clear(_pointer);
+            LibLoader.LibNative.std_string_clear(_pointer);
         }
     }
 
