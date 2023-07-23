@@ -7,7 +7,7 @@ public static class SymbolHelper
     static SymbolHelper()
     {
         Console.WriteLine("Loading symbol table...");
-        Stopwatch sw = new();
+        Stopwatch sw = Stopwatch.StartNew();
         SymbolTable = new FastElfQuery.ElfSymbolQueryTable("bedrock_server_symbols.debug");
         sw.Stop();
         Console.WriteLine($"Symbol table loaded in {sw.ElapsedMilliseconds}ms");
