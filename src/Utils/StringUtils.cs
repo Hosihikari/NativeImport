@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace NativeInterop.Utils;
+namespace Hosihikari.NativeInterop.Utils;
 
 public static class StringUtils
 {

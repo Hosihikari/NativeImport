@@ -1,6 +1,6 @@
-﻿using NativeInterop.Utils;
+﻿using Hosihikari.NativeInterop.Utils;
 
-namespace NativeInterop.NativeTypes;
+namespace Hosihikari.NativeInterop.NativeTypes;
 
 public class StdString
 {

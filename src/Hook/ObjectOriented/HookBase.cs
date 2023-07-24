@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
-using NativeInterop.LibLoader;
+using Hosihikari.NativeInterop.LibLoader;
 
-namespace NativeInterop.Hook.OOP;
+namespace Hosihikari.NativeInterop.Hook.ObjectOriented;
 
 public abstract class HookBase<TDelegate> : IHook
     where TDelegate : Delegate

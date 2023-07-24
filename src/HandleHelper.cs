@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace NativeInterop;
+namespace Hosihikari.NativeInterop;
 
 public class HandleHelper
 {

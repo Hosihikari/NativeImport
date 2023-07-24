@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace NativeInterop.NativeTypes;
+namespace Hosihikari.NativeInterop.NativeTypes;
 
 public class StdVector<TStruct> : StdVectorBase
     where TStruct : struct

@@ -1,4 +1,4 @@
-﻿namespace NativeInterop.Hook.OOP;
+﻿namespace Hosihikari.NativeInterop.Hook.ObjectOriented;
 
 internal interface IHook
 {

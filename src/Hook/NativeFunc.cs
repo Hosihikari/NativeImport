@@ -1,6 +1,6 @@
-﻿using NativeInterop.LibLoader;
+﻿using Hosihikari.NativeInterop.LibLoader;
 
-namespace NativeInterop.Hook;
+namespace Hosihikari.NativeInterop.Hook;
 
 public class NativeFunc
 {

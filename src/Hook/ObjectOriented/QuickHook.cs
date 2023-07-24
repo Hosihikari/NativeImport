@@ -1,4 +1,4 @@
-﻿namespace NativeInterop.Hook.OOP;
+﻿namespace Hosihikari.NativeInterop.Hook.ObjectOriented;
 
 public class QuickHook<TDelegate> : HookBase<TDelegate>
     where TDelegate : Delegate

@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace NativeInterop.LibLoader;
+namespace Hosihikari.NativeInterop.LibLoader;
 
 public enum HookResult : int
 {

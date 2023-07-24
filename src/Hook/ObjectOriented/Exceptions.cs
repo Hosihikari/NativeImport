@@ -1,6 +1,6 @@
-﻿using NativeInterop.LibLoader;
+﻿using Hosihikari.NativeInterop.LibLoader;
 
-namespace NativeInterop.Hook.OOP;
+namespace Hosihikari.NativeInterop.Hook.ObjectOriented;
 
 public class HookAlreadyInstalledException : Exception
 {

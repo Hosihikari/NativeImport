@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using Hosihikari.FastElfQuery;
 
-namespace NativeInterop;
+namespace Hosihikari.NativeInterop;
 
 public static class SymbolHelper
 {

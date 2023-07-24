@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace NativeInterop.LibLoader;
+namespace Hosihikari.NativeInterop.LibLoader;
 
 internal static partial class LibNative
 {
