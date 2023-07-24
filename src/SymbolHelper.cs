@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Hosihikari.FastElfQuery;
 
 namespace NativeInterop;
 
@@ -8,12 +9,12 @@ public static class SymbolHelper
     {
         Console.WriteLine("Loading symbol table...");
         Stopwatch sw = Stopwatch.StartNew();
-        SymbolTable = new FastElfQuery.ElfSymbolQueryTable("bedrock_server_symbols.debug");
+        SymbolTable = new ElfSymbolQueryTable("bedrock_server_symbols.debug");
         sw.Stop();
         Console.WriteLine($"Symbol table loaded in {sw.ElapsedMilliseconds}ms");
     }
 
-    public static FastElfQuery.ElfSymbolQueryTable SymbolTable { get; }
+    public static ElfSymbolQueryTable SymbolTable { get; }
 
     public static bool TryDlsym(string symbolName, out nint address)
     {

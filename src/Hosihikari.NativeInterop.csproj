@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="FastElfQuery">
-      <HintPath>..\..\FastElfQuery\src\bin\Release\net7.0\FastElfQuery.dll</HintPath>
+    <Reference Include="Hosihikari.FastElfQuery">
+      <HintPath>..\..\FastElfQuery\src\bin\Release\net7.0\Hosihikari.FastElfQuery.dll</HintPath>
     </Reference>
   </ItemGroup>
 
