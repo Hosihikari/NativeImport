@@ -4,6 +4,14 @@ namespace Hosihikari.NativeInterop.Utils;
 
 public static class StringUtils
 {
+    public static unsafe string MarshalStdString(void* strPtr)
+    {
+        return Encoding.UTF8.GetString(
+            LibLoader.LibNative.std_string_data(strPtr),
+            LibLoader.LibNative.std_string_length(strPtr)
+        );
+    }
+
     /// <summary>
     /// Converts a string to a null-terminated UTF-8 byte array.
     /// </summary>
