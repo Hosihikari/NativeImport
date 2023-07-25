@@ -43,6 +43,11 @@ public static class SymbolHelper
         return SymbolTable.Query(symbolName) + HandleHelper.MainHandleHandle;
     }
 
+    public static Lazy<nint> DlsymLazy(string symbolName)
+    {
+        return new Lazy<nint>(() => Dlsym(symbolName));
+    }
+
     public static unsafe void* DlsymPointer(string symbolName)
     {
         return (SymbolTable.Query(symbolName) + HandleHelper.MainHandleHandle).ToPointer();
