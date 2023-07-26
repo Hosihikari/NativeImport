@@ -24,3 +24,13 @@ public class HookInstalledFailedException : Exception
 
     public HookResult Result { get; }
 }
+public class HookUninstalledFailedException : Exception
+{
+    internal HookUninstalledFailedException(HookResult result)
+        : base($"Hook uninstalled failed, result: {result}")
+    {
+        Result = result;
+    }
+
+    public HookResult Result { get; }
+}

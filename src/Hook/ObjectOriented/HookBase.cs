@@ -103,9 +103,9 @@ public abstract class HookBase<TDelegate> : IHook
                 _handle?.Free();
                 _handle = null;
                 //unhook and check if success, otherwise throw exception
-                if (_instance.Uninstall() is HookResult.Success and var errCode)
+                if (_instance.Uninstall() is not HookResult.Success and var errCode)
                 {
-                    throw new HookInstalledFailedException(errCode);
+                    throw new HookUninstalledFailedException(errCode);
                 }
                 else
                 {
