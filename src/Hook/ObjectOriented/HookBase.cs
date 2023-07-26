@@ -91,6 +91,18 @@ public abstract class HookBase<TDelegate> : IHook
         }
     }
 
+    public void TryInstall()
+    {
+        try
+        {
+            Install();
+        }
+        catch
+        {
+            // ignored
+        }
+    }
+
     public void Uninstall()
     {
         lock (this)
@@ -113,6 +125,18 @@ public abstract class HookBase<TDelegate> : IHook
                     _instance = null;
                 }
             }
+        }
+    }
+
+    public void TryUninstall()
+    {
+        try
+        {
+            Uninstall();
+        }
+        catch
+        {
+            // ignored
         }
     }
 }
