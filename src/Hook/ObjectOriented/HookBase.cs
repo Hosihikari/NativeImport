@@ -91,15 +91,16 @@ public abstract class HookBase<TDelegate> : IHook
         }
     }
 
-    public void TryInstall()
+    public bool TryInstall()
     {
         try
         {
             Install();
+            return true;
         }
         catch
         {
-            // ignored
+            return false;
         }
     }
 
@@ -128,15 +129,16 @@ public abstract class HookBase<TDelegate> : IHook
         }
     }
 
-    public void TryUninstall()
+    public bool TryUninstall()
     {
         try
         {
             Uninstall();
+            return true;
         }
         catch
         {
-            // ignored
+            return false;
         }
     }
 }
