@@ -1,116 +1,105 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using size_t = System.UInt64;
 
 namespace Hosihikari.NativeInterop.NativeTypes;
 
-public class StdVector<TStruct> : StdVectorBase
-    where TStruct : struct
+[StructLayout(LayoutKind.Sequential)]
+internal unsafe ref struct CxxVectorDesc
 {
-    private static int GetItemSize() => Unsafe.SizeOf<TStruct>();
+    public void* begin;
 
-    public StdVector()
-        : base(GetItemSize()) { }
+    public void* end;
 
-    public StdVector(IntPtr pointer)
-        : base(pointer, GetItemSize()) { }
-
-    public unsafe StdVector(void* pointer)
-        : base(pointer, GetItemSize()) { }
+    //compressed_pair<pointer,allocator<T>>
+    public void* end_cap;
 }
 
-public class StdVectorBase
+public unsafe class StdVector<T> where T : unmanaged
 {
-    private readonly unsafe void* _pointer;
-
-    // size of each item in the vector
-    private readonly int _itemSize;
-
-    //flag to determine if the pointer is created by this lib and should be deleted in the destructor
+    private readonly CxxVectorDesc* _pointer;
     private readonly bool _isOwner;
 
-    public StdVectorBase(int itemSize)
-    {
-        unsafe
-        {
-            _pointer = LibLoader.LibNative.std_vector_new();
-            _isOwner = true;
-        }
-        _itemSize = itemSize;
-    }
+    private T* First { get => (T*)_pointer->begin; set => _pointer->begin = value; }
+    private T* Last { get => (T*)_pointer->end; set => _pointer->end = value; }
+    private T* End { get => (T*)_pointer->end_cap; set => _pointer->end_cap = value; }
 
-    public unsafe StdVectorBase(nint pointer, int itemSize)
+    private static readonly size_t max_size = size_t.MaxValue / (size_t)sizeof(T);
+
+    public StdVector(nint pointer)
     {
-        _pointer = pointer.ToPointer();
+        _pointer = (CxxVectorDesc*)pointer.ToPointer();
         _isOwner = false;
-        _itemSize = itemSize;
     }
 
-    public unsafe StdVectorBase(void* pointer, int itemSize)
+    public StdVector(void* pointer)
     {
-        _pointer = pointer;
+        _pointer = (CxxVectorDesc*)pointer;
         _isOwner = false;
-        _itemSize = itemSize;
     }
 
-    ~StdVectorBase()
+    public StdVector()
     {
-        unsafe
-        {
-            if (_isOwner)
-            {
-                LibLoader.LibNative.std_vector_delete(_pointer);
-            }
-        }
+        _pointer = (CxxVectorDesc*)Marshal.AllocHGlobal(sizeof(CxxVectorDesc));
+        _isOwner = true;
+        Unsafe.InitBlock(_pointer, 0, (uint)sizeof(CxxVectorDesc));
     }
 
-    public void RawPushBack(ReadOnlySpan<byte> data)
-    {
-        unsafe
-        {
-            fixed (byte* dataPtr = data)
-            {
-                LibLoader.LibNative.std_vector_push_back(_pointer, dataPtr, data.Length);
-            }
-        }
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public size_t Size() => (ulong)((Last - First) / sizeof(T));
 
-    public ReadOnlySpan<byte> RawData
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public size_t Capacity() => (ulong)((End - First) / sizeof(T));
+
+    public ref T this[size_t index]
     {
         get
         {
-            unsafe
-            {
-                return new ReadOnlySpan<byte>(
-                    LibLoader.LibNative.std_vector_data(_pointer),
-                    LibLoader.LibNative.std_vector_size(_pointer)
-                );
-            }
+            if (index > Capacity() - 1)
+                throw new IndexOutOfRangeException("index > Capacity() - 1");
+
+            return ref First[index];
         }
     }
 
-    public int RawSize
+    private size_t CalculateGrowth(size_t newSize)
     {
-        get
+        var oldCapacity = Capacity();
+        if (oldCapacity > max_size - oldCapacity / 2)
+            return max_size;
+
+        var geometric = oldCapacity + oldCapacity / 2;
+
+        if (geometric < newSize)
+            return newSize;
+
+        return geometric;
+    }
+
+    public ref T EmplaceBack(in T val)
+    {
+        if (Last != End)
         {
-            unsafe
-            {
-                return LibLoader.LibNative.std_vector_size(_pointer);
-            }
+            var last = Last;
+            Unsafe.Write(last, val);
+            ++Last;
+            return ref Unsafe.AsRef<T>(last);
+        }
+        else
+        {
+            var newCapacity = CalculateGrowth(Size() + 1);
+            var oldSize = Size();
+            var newVec = (T*)Marshal.AllocHGlobal((int)newCapacity * sizeof(T));
+            Unsafe.CopyBlock(newVec, First, (uint)(((int)oldSize) * sizeof(T)));
+            Unsafe.Write(newVec + oldSize, val);
+
+            if (First is not null)
+                Marshal.FreeHGlobal((nint)First);
+
+            First = newVec;
+            Last = newVec + oldSize + 1;
+            End = newVec + newCapacity;
+            return ref Unsafe.AsRef<T>(newVec + oldSize);
         }
     }
-
-    public unsafe ReadOnlySpan<byte> RawAt(int index)
-    {
-        return new ReadOnlySpan<byte>(
-            LibLoader.LibNative.std_vector_at(_pointer, index),
-            _itemSize
-        );
-    }
-
-    protected unsafe void* InternalRawFront => LibLoader.LibNative.std_vector_front(_pointer);
-    protected unsafe void* InternalRawBack => LibLoader.LibNative.std_vector_back(_pointer);
-    //public unsafe ReadOnlySpan<byte> RawFront =>
-    //    new(LibLoader.LibNative.std_vector_front(_pointer), _itemSize);
-
-    //public unsafe ReadOnlySpan<byte> RawBack =>
-    //    new(LibLoader.LibNative.std_vector_back(_pointer), _itemSize);
 }
