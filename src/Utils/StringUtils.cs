@@ -6,10 +6,17 @@ public static class StringUtils
 {
     public static unsafe string MarshalStdString(void* strPtr)
     {
-        return Encoding.UTF8.GetString(
-            LibLoader.LibNative.std_string_data(strPtr),
-            LibLoader.LibNative.std_string_length(strPtr)
-        );
+        var dataPtr = LibLoader.LibNative.std_string_data(strPtr);
+        if (dataPtr is null)
+        {
+            return string.Empty;
+        }
+        var len = LibLoader.LibNative.std_string_length(strPtr);
+        if (len <= 0)
+        {
+            return string.Empty;
+        }
+        return Encoding.UTF8.GetString(dataPtr, len);
     }
 
     /// <summary>
@@ -51,6 +58,10 @@ public static class StringUtils
 
     public static string Utf8ToString(ReadOnlySpan<byte> data)
     {
+        if (data.Length == 0)
+        {
+            return string.Empty;
+        }
         return Encoding.UTF8.GetString(data);
     }
 }

@@ -57,10 +57,13 @@ public class StdString
         {
             unsafe
             {
-                return new ReadOnlySpan<byte>(
-                    LibLoader.LibNative.std_string_data(_pointer),
-                    LibLoader.LibNative.std_string_length(_pointer)
-                );
+                var ptr = LibLoader.LibNative.std_string_data(_pointer);
+                var len = LibLoader.LibNative.std_string_length(_pointer);
+                if (ptr is null || len <= 0)
+                {
+                    return ReadOnlySpan<byte>.Empty;
+                }
+                return new ReadOnlySpan<byte>(ptr, len);
             }
         }
     }
