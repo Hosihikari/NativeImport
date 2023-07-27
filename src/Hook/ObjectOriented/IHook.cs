@@ -1,6 +1,6 @@
 ﻿namespace Hosihikari.NativeInterop.Hook.ObjectOriented;
 
-internal interface IHook
+public interface IHook
 {
     void Install();
     void Uninstall();
