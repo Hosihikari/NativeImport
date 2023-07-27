@@ -71,10 +71,15 @@ internal static partial class LibNative
     #region std::istream
 
     [LibraryImport(LibName, EntryPoint = "std_istream_new")]
-    internal static unsafe partial void* std_istream_new(byte* buffer, int length);
+    internal static unsafe partial void std_istream_new(
+        byte* buffer,
+        int length,
+        out void* stream,
+        out void* sbuf
+    );
 
     [LibraryImport(LibName, EntryPoint = "std_istream_delete")]
-    internal static unsafe partial void std_istream_delete(void* stream);
+    internal static unsafe partial void std_istream_delete(void* stream, void* sbuf);
 
     [LibraryImport(LibName, EntryPoint = "std_istream_read")]
     [return: MarshalAs(UnmanagedType.U1)]

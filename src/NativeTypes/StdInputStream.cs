@@ -1,25 +1,37 @@
+using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using Hosihikari.NativeInterop.LibLoader;
 
 namespace Hosihikari.NativeInterop.NativeTypes;
 
+/// <summary>
+/// std::istream wrapper
+/// </summary>
 public class StdInputStream
 {
     private readonly unsafe void* _pointer;
+    private readonly unsafe byte* _buffer;
+    private readonly unsafe void* _nativebuffer;
 
     //flag to determine if the pointer is created by this lib and should be deleted in the destructor
     private readonly bool _isOwner;
+    public unsafe void* Pointer => _pointer;
 
     public StdInputStream(ReadOnlySpan<byte> data)
     {
         unsafe
         {
-            fixed (byte* dataPtr = data)
-            {
-                _pointer = LibLoader.LibNative.std_istream_new(dataPtr, data.Length);
-                _isOwner = true;
-            }
+            _buffer = (byte*)NativeMemory.Alloc((nuint)data.Length);
+            data.CopyTo(new Span<byte>(_buffer, data.Length));
+            LibLoader.LibNative.std_istream_new(
+                _buffer,
+                data.Length,
+                out _pointer,
+                out _nativebuffer
+            );
+            _isOwner = true;
         }
     }
 
@@ -29,10 +41,25 @@ public class StdInputStream
         _isOwner = false;
     }
 
+    ~StdInputStream()
+    {
+        unsafe
+        {
+            if (_isOwner)
+            {
+                if (_buffer is not null)
+                {
+                    NativeMemory.Free(_buffer);
+                }
+                LibLoader.LibNative.std_istream_delete(_pointer, _nativebuffer);
+            }
+        }
+    }
+
     public byte[] ReadToEnd()
     {
         MemoryStream ms = new();
-        StreamWriter writer = new(ms);
+        BinaryWriter writer = new(ms);
         unsafe
         {
             const int bufferSize = 128;
@@ -50,21 +77,11 @@ public class StdInputStream
             {
                 data = data.AsSpan(0, end).ToArray();
             }
-
             writer.Write(data);
             writer.Flush();
             return ms.ToArray();
         }
     }
 
-    ~StdInputStream()
-    {
-        unsafe
-        {
-            if (_isOwner)
-            {
-                LibLoader.LibNative.std_istream_delete(_pointer);
-            }
-        }
-    }
+    public static unsafe implicit operator void*(StdInputStream stream) => stream.Pointer;
 }
