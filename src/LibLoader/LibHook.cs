@@ -8,8 +8,6 @@ public enum HookResult : int
     Success = 0
 }
 
-internal struct FuncHookT { }
-
 internal static class LibHook
 {
     private const string LibName = "libdobby.so";
