@@ -8,7 +8,6 @@ internal static partial class LibNative
 
     #region std::string
 
-
     [LibraryImport(LibName, EntryPoint = "std_string_new")]
     internal static unsafe partial void* std_string_new();
 
@@ -32,9 +31,11 @@ internal static partial class LibNative
 
     [LibraryImport(LibName, EntryPoint = "std_string_data")]
     internal static unsafe partial byte* std_string_data(void* str);
+
     #endregion
 
     #region std::vector
+
     [LibraryImport(LibName, EntryPoint = "std_vector_new")]
     internal static unsafe partial void* std_vector_new();
 
@@ -64,6 +65,20 @@ internal static partial class LibNative
 
     [LibraryImport(LibName, EntryPoint = "std_vector_clear")]
     internal static unsafe partial void std_vector_clear(void* vec);
+
+    #endregion
+
+    #region std::istream
+
+    [LibraryImport(LibName, EntryPoint = "std_istream_new")]
+    internal static unsafe partial void* std_istream_new(byte* buffer, int length);
+
+    [LibraryImport(LibName, EntryPoint = "std_istream_delete")]
+    internal static unsafe partial void std_istream_delete(void* stream);
+
+    [LibraryImport(LibName, EntryPoint = "std_istream_read")]
+    [return: MarshalAs(UnmanagedType.U1)]
+    internal static unsafe partial bool std_istream_read(void* stream, byte* buffer, int length);
 
     #endregion
 }
