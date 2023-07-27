@@ -4,62 +4,6 @@ namespace Hosihikari.NativeInterop.Hook;
 
 public class NativeFunc
 {
-    public class HookInstance
-    {
-        internal unsafe HookInstance(FuncHookT* instance, void* original)
-        {
-            _instance = instance;
-            _original = original;
-        }
-
-        private unsafe FuncHookT* _instance;
-        private unsafe void* _original;
-        internal unsafe FuncHookT* Instance
-        {
-            get
-            {
-                CheckActive();
-                return _instance;
-            }
-        }
-        public unsafe void* Original
-        {
-            get
-            {
-                CheckActive();
-                return _original;
-            }
-        }
-
-        public HookResult Uninstall()
-        {
-            unsafe
-            {
-                CheckActive();
-                var result = LibHook.Unhook(ref _original, ref _instance);
-                if (result == HookResult.Success)
-                {
-                    _instance = null;
-                    _original = null;
-                }
-                return result;
-            }
-        }
-
-        private void CheckActive()
-        {
-            unsafe
-            {
-                if (_original is null || _instance is null)
-                {
-                    throw new InvalidOperationException(
-                        "This hook is not active. Maybe already uninstalled."
-                    );
-                }
-            }
-        }
-    }
-
     /// <summary>
     /// Hook a function by its address.
     /// </summary>
@@ -75,8 +19,8 @@ public class NativeFunc
         out HookInstance instance
     )
     {
-        var result = LibHook.Hook(address, hook, out org, out var t);
-        instance = new HookInstance(t, org);
+        var result = LibHook.Hook(address, hook, out org);
+        instance = new HookInstance(address, org);
         return result;
     }
 
@@ -113,9 +57,9 @@ public class NativeFunc
 
     public static HookResult Hook(nint address, nint hook, out nint org, out HookInstance instance)
     {
-        if (address == 0)
+        if (address == nint.Zero)
             throw new NullReferenceException(nameof(address));
-        if (hook == 0)
+        if (hook == nint.Zero)
             throw new NullReferenceException(nameof(hook));
         unsafe
         {

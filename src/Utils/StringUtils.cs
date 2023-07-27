@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Hosihikari.NativeInterop.LibLoader;
 
 namespace Hosihikari.NativeInterop.Utils;
 
@@ -6,12 +7,12 @@ public static class StringUtils
 {
     public static unsafe string MarshalStdString(void* strPtr)
     {
-        var dataPtr = LibLoader.LibNative.std_string_data(strPtr);
+        var dataPtr = LibNative.std_string_data(strPtr);
         if (dataPtr is null)
         {
             return string.Empty;
         }
-        var len = LibLoader.LibNative.std_string_length(strPtr);
+        var len = LibNative.std_string_length(strPtr);
         if (len <= 0)
         {
             return string.Empty;

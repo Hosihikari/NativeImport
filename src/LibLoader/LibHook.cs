@@ -5,43 +5,22 @@ namespace Hosihikari.NativeInterop.LibLoader;
 public enum HookResult : int
 {
     InternalError = -1,
-    Success = 0,
-    ErrorOutOfMemory = 1,
-    ErrorAlreadyInstalled = 2,
-    ErrorDisassembly = 3,
-    ErrorIpRelativeOffset = 4,
-    ErrorCannotFixIpRelative = 5,
-    ErrorFoundBackJump = 6,
-    ErrorTooShortInstructions = 7,
-
-    /// <summary>
-    /// memory allocation error
-    /// </summary>
-    ErrorMemoryAllocation = 8,
-
-    /// <summary>
-    ///  other memory function errors
-    /// </summary>
-    ErrorMemoryFunction = 9,
-    ErrorNotInstalled = 10,
-    ErrorNoAvailableRegisters = 11,
-    ErrorNoSpaceNearTargetAddr = 12,
+    Success = 0
 }
 
 internal struct FuncHookT { }
 
 internal static class LibHook
 {
-    const string LibName = LibNative.LibName; //"libhook";
+    private const string LibName = "libdobby.so";
 
-    [DllImport(LibName, EntryPoint = "hook", ExactSpelling = true)]
+    [DllImport(LibName, EntryPoint = "DobbyHook", ExactSpelling = true)]
     internal static extern unsafe HookResult Hook(
-        void* rva,
-        void* hook,
-        out void* org,
-        out FuncHookT* instance
+        void* address,
+        void* replace_func,
+        out void* origin_func
     );
 
-    [DllImport(LibName, EntryPoint = "unhook", ExactSpelling = true)]
-    internal static extern unsafe HookResult Unhook(ref void* org, ref FuncHookT* instance);
+    [DllImport(LibName, EntryPoint = "DobbyDestroy", ExactSpelling = true)]
+    internal static extern unsafe HookResult Unhook(void* address);
 }

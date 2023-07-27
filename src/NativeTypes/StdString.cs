@@ -1,4 +1,5 @@
-﻿using Hosihikari.NativeInterop.Utils;
+﻿using Hosihikari.NativeInterop.LibLoader;
+using Hosihikari.NativeInterop.Utils;
 
 namespace Hosihikari.NativeInterop.NativeTypes;
 
@@ -13,7 +14,7 @@ public class StdString
     {
         unsafe
         {
-            _pointer = LibLoader.LibNative.std_string_new();
+            _pointer = LibNative.std_string_new();
             _isOwner = true;
         }
     }
@@ -22,7 +23,7 @@ public class StdString
     {
         fixed (byte* data = StringUtils.StringToManagedUtf8(str))
         {
-            _pointer = LibLoader.LibNative.std_string_new_str(data);
+            _pointer = LibNative.std_string_new_str(data);
             _isOwner = true;
         }
     }
@@ -45,7 +46,7 @@ public class StdString
         {
             if (_isOwner)
             {
-                LibLoader.LibNative.std_string_delete(_pointer);
+                LibNative.std_string_delete(_pointer);
             }
         }
     }
@@ -57,8 +58,8 @@ public class StdString
         {
             unsafe
             {
-                var ptr = LibLoader.LibNative.std_string_data(_pointer);
-                var len = LibLoader.LibNative.std_string_length(_pointer);
+                var ptr = LibNative.std_string_data(_pointer);
+                var len = LibNative.std_string_length(_pointer);
                 if (ptr is null || len <= 0)
                 {
                     return ReadOnlySpan<byte>.Empty;
@@ -74,7 +75,7 @@ public class StdString
         {
             unsafe
             {
-                return LibLoader.LibNative.std_string_length(_pointer);
+                return LibNative.std_string_length(_pointer);
             }
         }
     }
@@ -85,7 +86,7 @@ public class StdString
         {
             fixed (byte* data = StringUtils.StringToManagedUtf8(str))
             {
-                LibLoader.LibNative.std_string_append(_pointer, data);
+                LibNative.std_string_append(_pointer, data);
             }
         }
     }
@@ -94,7 +95,7 @@ public class StdString
     {
         unsafe
         {
-            LibLoader.LibNative.std_string_append_std_string(_pointer, str._pointer);
+            LibNative.std_string_append_std_string(_pointer, str._pointer);
         }
     }
 
@@ -102,7 +103,7 @@ public class StdString
     {
         unsafe
         {
-            LibLoader.LibNative.std_string_clear(_pointer);
+            LibNative.std_string_clear(_pointer);
         }
     }
 

@@ -60,7 +60,7 @@ public abstract class HookBase<TDelegate> : IHook
     //alloc handle for delegate
     private GCHandle? _handle = null;
 
-    private NativeFunc.HookInstance? _instance = null;
+    private HookInstance? _instance = null;
 
     public void Install()
     {
