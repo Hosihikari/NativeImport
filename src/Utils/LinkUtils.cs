@@ -1,4 +1,9 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Buffers;
+using System.Diagnostics;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Text;
+using Hosihikari.NativeInterop.LibLoader;
 
 namespace Hosihikari.NativeInterop.Utils;
 
@@ -39,7 +44,7 @@ public static class LinkUtils
             throw new ArgumentException("Source and Target are the same");
         while (true)
         {
-            if (LibLoader.LibcHelper.symlink(symlink: symlink, target: target) == 0)
+            if (LibcHelper.symlink(symlink: symlink, target: target) == 0)
                 return;
             int errno = Marshal.GetLastWin32Error();
             switch (errno)
@@ -59,4 +64,49 @@ public static class LinkUtils
         (errno & 0x80000000) == 0x80000000
             ? errno
             : (errno & 0x0000FFFF) | unchecked((int)0x80070000);
+
+    private const int BufferSize = 4097; // PATH_MAX is (usually?) 4096.
+
+    public static string ReadLink(string symlinkPath)
+    {
+        var symlinkSize = Encoding.UTF8.GetByteCount(symlinkPath);
+        var symlink = ArrayPool<byte>.Shared.Rent(symlinkSize + 1);
+        var buffer = ArrayPool<byte>.Shared.Rent(BufferSize);
+        try
+        {
+            Encoding.UTF8.GetBytes(symlinkPath, 0, symlinkPath.Length, symlink, 0);
+            symlink[symlinkSize] = 0;
+
+            var size = LibcHelper.readlink(symlink, buffer, BufferSize);
+            return Encoding.UTF8.GetString(buffer, 0, (int)size);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(symlink);
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
+    }
+
+    public static bool IsLink(string path)
+    {
+        var attributes = File.GetAttributes(path);
+        return (attributes & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint;
+    }
+
+    public static void Unlink(string path)
+    {
+        if (path == null)
+            throw new ArgumentNullException(nameof(path));
+
+        while (true)
+        {
+            if (LibcHelper.unlink(path) == 0)
+                return;
+            int errno = Marshal.GetLastWin32Error();
+            if (errno == Eintr)
+                continue; //retry
+            int hResult = ParseHResult(errno);
+            Marshal.ThrowExceptionForHR(hResult);
+        }
+    }
 }

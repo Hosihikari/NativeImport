@@ -18,4 +18,17 @@ public static class LibcHelper
 
     [DllImport(libc, SetLastError = true)]
     public static extern int symlink(string target, string symlink);
+
+    [DllImport(libc)]
+    public static extern IntPtr strerror(int errnum);
+
+    [DllImport(libc, SetLastError = true)]
+    public static extern long readlink(
+        [MarshalAs(UnmanagedType.LPArray)] byte[] filename,
+        [MarshalAs(UnmanagedType.LPArray)] byte[] buffer,
+        long len
+    );
+
+    [DllImport(libc, SetLastError = true)]
+    public static extern int unlink(string path);
 }
