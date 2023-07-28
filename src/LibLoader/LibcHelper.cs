@@ -15,4 +15,7 @@ public static class LibcHelper
 
     [DllImport(libc)]
     public static extern int dlclose(nint handle);
+
+    [DllImport(libc, SetLastError = true)]
+    public static extern int symlink(string target, string symlink);
 }
