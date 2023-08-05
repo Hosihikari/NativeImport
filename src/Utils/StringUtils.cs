@@ -17,7 +17,7 @@ public static class StringUtils
         {
             return string.Empty;
         }
-        return Encoding.UTF8.GetString(dataPtr, len);
+        return Encoding.UTF8.GetString(dataPtr, (int)len);
     }
 
     /// <summary>
