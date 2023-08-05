@@ -6,7 +6,7 @@
 
 public static class std
 {
-    public static move_handle<T> move<T>(T _Right) where T : class, ICppInstance<T> => new(_Right);
+    public static move_handle<T> move<T>(T _Right) where T : class, IDisposable, ICppInstance<T> => new(_Right);
 }
 
 #pragma warning restore CS0618

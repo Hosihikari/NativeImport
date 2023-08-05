@@ -17,31 +17,7 @@ public readonly ref struct move_handle<T> where T : class, ICppInstance<T>
         instance = val;
     }
 
-    public unsafe T MoveInstance()
-    {
-        var ptr = instance.Pointer;
-        var own = instance.IsOwner;
-
-        try
-        {
-            instance.Pointer = 0;
-            instance.IsOwner = false;
-
-            if (instance is IDisposable ins)
-                ins.Dispose();
-
-            return T.ConstructInstance(ptr, own);
-        }
-        catch
-        {
-            throw;
-        }
-        finally
-        {
-            if (own && ptr is not 0) T.DestructInstance(ptr);
-            NativeMemory.Free((void*)ptr);
-        }
-    }
+    public T Target => instance;
 }
 #pragma warning restore IDE1006
 #pragma warning restore CS8981
