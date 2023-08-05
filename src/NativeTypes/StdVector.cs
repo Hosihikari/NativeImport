@@ -1,11 +1,13 @@
-﻿using System.Runtime.CompilerServices;
+﻿using Hosihikari.NativeInterop.LibLoader;
+using Hosihikari.NativeInterop.UnsafeTypes;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using size_t = System.UInt64;
 
 namespace Hosihikari.NativeInterop.NativeTypes;
 
 [StructLayout(LayoutKind.Sequential)]
-internal unsafe ref struct CxxVectorDesc
+internal unsafe struct CxxVectorDesc
 {
     public void* begin;
 
@@ -15,10 +17,109 @@ internal unsafe ref struct CxxVectorDesc
     public void* end_cap;
 }
 
-public unsafe class StdVector<T> where T : unmanaged
+public unsafe class StdVector<T> :
+    IDisposable,
+    ICppInstance<StdVector<T>>,
+    IMoveableCppInstance<StdVector<T>>,
+    ICopyableCppInstance<StdVector<T>>/*,*/
+    //IEnumerable<T>
+    where T : unmanaged
 {
-    private readonly CxxVectorDesc* _pointer;
-    private readonly bool _isOwner;
+    public static ulong ClassSize => 24ul;
+
+    public bool IsOwner { get => _isOwner; set => _isOwner = value; }
+    public nint Pointer { get => (nint)_pointer; set => _pointer = (CxxVectorDesc*)value; }
+
+    public static StdVector<T> ConstructInstance(nint ptr, bool owns) => new(ptr, owns);
+
+    public static void DestructInstance(nint ptr)
+    {
+        var p = (CxxVectorDesc*)ptr;
+        if (p is not null)
+            LibNative.operator_delete(p);
+
+        p->begin = null;
+        p->end = null;
+        p->end_cap = null;
+    }
+
+    static object ICppInstanceNonGeneric.ConstructInstance(nint ptr, bool owns) => ConstructInstance(ptr, owns);
+
+    public static StdVector<T> ConstructInstanceByCopy(StdVector<T> right) => new(right);
+    public static StdVector<T> ConstructInstanceByMove(move_handle<StdVector<T>> right) => new(right);
+
+
+    public static implicit operator nint(StdVector<T> vec) => (nint)vec._pointer;
+
+    public static implicit operator void*(StdVector<T> vec) => vec._pointer;
+
+    public void Destruct() => DestructInstance(this);
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+
+            if (_isOwner)
+            {
+                Destruct();
+                LibNative.operator_delete(this);
+            }
+
+            disposedValue = true;
+        }
+    }
+
+    ~StdVector() => Dispose(disposing: false);
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+
+    private CxxVectorDesc* _pointer;
+    private bool _isOwner;
+    private bool disposedValue;
+
+
+    public StdVector(nint ptr, bool isOwner = false)
+    {
+        _pointer = (CxxVectorDesc*)ptr;
+        _isOwner = isOwner;
+    }
+
+    public StdVector(StdVector<T> vec)
+    {
+        var ptr = vec._pointer;
+        if (ptr is null)
+            throw new NullReferenceException(nameof(vec._pointer));
+
+        var size = vec.Size();
+        _pointer = heap_alloc<CxxVectorDesc>.New(default);
+        First = heap_alloc<T>.NewArray(size);
+        Unsafe.CopyBlock(First, vec.First, (uint)size * (uint)sizeof(T));
+        Last = First + size;
+        End = Last + vec.Capacity();
+    }
+
+    public StdVector(move_handle<StdVector<T>> vec)
+    {
+        var ptr = vec.Target._pointer;
+        if (ptr is null)
+            throw new NullReferenceException(nameof(vec.Target._pointer));
+
+        Destruct();
+        First = vec.Target.First;
+        Last = vec.Target.Last;
+        End = vec.Target.End;
+
+        vec.Target.First = null;
+        vec.Target.Last = null;
+        vec.Target.End = null;
+    }
+
+
 
     private T* First { get => (T*)_pointer->begin; set => _pointer->begin = value; }
     private T* Last { get => (T*)_pointer->end; set => _pointer->end = value; }

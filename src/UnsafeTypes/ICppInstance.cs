@@ -2,7 +2,6 @@
 
 public interface ICppInstanceNonGeneric : IDisposable
 {
-
     /// <summary>
     /// noexcept
     /// </summary>
