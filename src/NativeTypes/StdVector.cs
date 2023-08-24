@@ -25,6 +25,31 @@ public unsafe class StdVector<T> :
     //IEnumerable<T>
     where T : unmanaged
 {
+
+    [StructLayout(LayoutKind.Explicit, Size = 24)]
+    public struct StdVectorFiller : INativeTypeFiller<StdVectorFiller, StdVector<T>>
+    {
+        static StdVectorFiller()
+        {
+            if (sizeof(StdVectorFiller) != 24) throw new InvalidOperationException();
+        }
+
+        [FieldOffset(0)]
+        private long alignment_member;
+
+        public static void Destruct(StdVectorFiller* @this) => DestructInstance((nint)@this);
+
+        public static implicit operator StdVector<T>(in StdVectorFiller filler)
+        {
+            fixed (void* ptr = &filler)
+                return new StdVector<T>(ptr);
+        }
+    }
+
+    private static readonly bool IsFiller;
+    private static readonly delegate* managed<T*, void> DtorFptr;
+    static StdVector() => IsFiller = NativeTypeFillerHelper.TryGetDestructorFunctionPointer(out DtorFptr);
+
     public static ulong ClassSize => 24ul;
 
     public bool IsOwner { get => _isOwner; set => _isOwner = value; }
@@ -35,6 +60,18 @@ public unsafe class StdVector<T> :
     public static void DestructInstance(nint ptr)
     {
         var p = (CxxVectorDesc*)ptr;
+
+        if (IsFiller)
+        {
+            using var vector = new StdVector<T>(ptr);
+            var size = vector.Size();
+            for (size_t i = 0; i < size; ++i)
+            {
+                fixed(T* currentPtr = & vector[i])
+                    DtorFptr(currentPtr);
+            }
+        }
+
         if (p is not null)
             LibNative.operator_delete(p);
 

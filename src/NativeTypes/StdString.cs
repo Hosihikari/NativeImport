@@ -4,6 +4,7 @@ using Hosihikari.NativeInterop.UnsafeTypes;
 using Hosihikari.NativeInterop.Utils;
 using System.Collections;
 using System.Collections.Specialized;
+using System.Runtime.InteropServices;
 
 namespace Hosihikari.NativeInterop.NativeTypes;
 
@@ -14,6 +15,27 @@ public unsafe class StdString :
     ICopyableCppInstance<StdString>,
     IEnumerable<byte>
 {
+
+    [StructLayout(LayoutKind.Explicit, Size = 32)]
+    public struct StdStringFiller : INativeTypeFiller<StdStringFiller, StdString>
+    {
+        static StdStringFiller()
+        {
+            if (sizeof(StdStringFiller) != 32) throw new InvalidOperationException();
+        }
+
+        [FieldOffset(0)]
+        private long alignment_member;
+
+        public static void Destruct(StdStringFiller* @this) => DestructInstance((nint)@this);
+
+        public static implicit operator StdString(in StdStringFiller filler)
+        {
+            fixed (void* ptr = &filler)
+                return new StdString(ptr);
+        }
+    }
+
     public static ulong ClassSize => LibNative.std_string_get_class_size();
 
     public bool IsOwner { get => _isOwner; set => _isOwner = value; }
