@@ -24,7 +24,7 @@ public unsafe class StdString :
         [FieldOffset(0)]
         private readonly long _alignment_member;
 
-        public static void Destruct(StdStringFiller* @this) => DestructInstance((nint)@this);
+        public static void Destruct(StdStringFiller* @this) => DestructInstance(new(@this));
 
         public static implicit operator StdString(in StdStringFiller filler)
         {
@@ -38,11 +38,11 @@ public unsafe class StdString :
     public static ulong ClassSize => LibNative.std_string_get_class_size();
 
     public bool IsOwner { get => _isOwner; set => _isOwner = value; }
-    public nint Pointer { get => (nint)_pointer; set => _pointer = (void*)value; }
+    public nint Pointer { get => new(_pointer); set => _pointer = value.ToPointer(); }
 
     public static StdString ConstructInstance(nint ptr, bool owns) => new(ptr, owns);
 
-    public static void DestructInstance(nint ptr) => LibNative.std_string_destructor((void*)ptr);
+    public static void DestructInstance(nint ptr) => LibNative.std_string_destructor(ptr.ToPointer());
 
     static object ICppInstanceNonGeneric.ConstructInstance(nint ptr, bool owns) => ConstructInstance(ptr, owns);
 
@@ -50,7 +50,7 @@ public unsafe class StdString :
     public static StdString ConstructInstanceByMove(MoveHandle<StdString> right) => new(right);
 
 
-    public static implicit operator nint(StdString str) => (nint)str._pointer;
+    public static implicit operator nint(StdString str) => new(str._pointer);
 
     public static implicit operator void*(StdString str) => str._pointer;
 
@@ -58,17 +58,18 @@ public unsafe class StdString :
 
     protected virtual void Dispose(bool disposing)
     {
-        if (!disposedValue)
+        if (disposedValue)
         {
-
-            if (_isOwner)
-            {
-                Destruct();
-                LibNative.operator_delete(this);
-            }
-
-            disposedValue = true;
+            return;
         }
+
+        if (_isOwner)
+        {
+            Destruct();
+            LibNative.operator_delete(this);
+        }
+
+        disposedValue = true;
     }
 
     ~StdString() => Dispose(disposing: false);
@@ -201,7 +202,9 @@ public unsafe class StdString :
             get
             {
                 if (currentOffset >= length)
+                {
                     throw new IndexOutOfRangeException();
+                }
                 return data[currentOffset];
             }
         }

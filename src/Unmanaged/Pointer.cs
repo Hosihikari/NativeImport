@@ -20,10 +20,11 @@ public readonly unsafe struct Pointer<T> where T : class, ICppInstance<T>
 
     public readonly void Delete()
     {
-        if (_ptr is not 0)
+        if (_ptr == nint.Zero)
         {
-            T.DestructInstance(_ptr);
-            NativeMemory.Free((void*)_ptr);
+            return;
         }
+        T.DestructInstance(_ptr);
+        NativeMemory.Free(_ptr.ToPointer());
     }
 }

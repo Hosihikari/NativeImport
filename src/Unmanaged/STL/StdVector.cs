@@ -20,8 +20,7 @@ public unsafe class StdVector<T> :
     IDisposable,
     ICppInstance<StdVector<T>>,
     IMoveableCppInstance<StdVector<T>>,
-    ICopyableCppInstance<StdVector<T>>/*,*/
-    //IEnumerable<T>
+    ICopyableCppInstance<StdVector<T>>
     where T : unmanaged
 {
 
@@ -30,13 +29,16 @@ public unsafe class StdVector<T> :
     {
         static StdVectorFiller()
         {
-            if (sizeof(StdVectorFiller) != 24) throw new InvalidOperationException();
+            if (sizeof(StdVectorFiller) != 24)
+            {
+                throw new InvalidOperationException();
+            }
         }
 
         [FieldOffset(0)]
         private readonly long _alignment_member;
 
-        public static void Destruct(StdVectorFiller* @this) => DestructInstance((nint)@this);
+        public static void Destruct(StdVectorFiller* @this) => DestructInstance(new(@this));
 
         public static implicit operator StdVector<T>(in StdVectorFiller filler)
         {
@@ -54,17 +56,17 @@ public unsafe class StdVector<T> :
     public static ulong ClassSize => 24ul;
 
     public bool IsOwner { get => _isOwner; set => _isOwner = value; }
-    public nint Pointer { get => (nint)_pointer; set => _pointer = (CxxVectorDesc*)value; }
+    public nint Pointer { get => new(_pointer); set => _pointer = (CxxVectorDesc*)value.ToPointer(); }
 
     public static StdVector<T> ConstructInstance(nint ptr, bool owns) => new(ptr, owns);
 
     public static void DestructInstance(nint ptr)
     {
-        CxxVectorDesc* p = (CxxVectorDesc*)ptr;
+        CxxVectorDesc* p = (CxxVectorDesc*)ptr.ToPointer();
 
         if (IsFiller)
         {
-            using StdVector<T> vector = new StdVector<T>(ptr);
+            using StdVector<T> vector = new(ptr);
             ulong size = vector.Size();
             for (size_t i = 0; i < size; ++i)
             {
@@ -91,7 +93,7 @@ public unsafe class StdVector<T> :
     public static StdVector<T> ConstructInstanceByMove(MoveHandle<StdVector<T>> right) => new(right.Target);
 
 
-    public static implicit operator nint(StdVector<T> vec) => (nint)vec._pointer;
+    public static implicit operator nint(StdVector<T> vec) => new(vec._pointer);
 
     public static implicit operator void*(StdVector<T> vec) => vec._pointer;
 
@@ -99,24 +101,25 @@ public unsafe class StdVector<T> :
 
     protected virtual void Dispose(bool disposing)
     {
-        if (!disposedValue)
+        if (disposedValue)
         {
-
-            if (_isOwner)
-            {
-                Destruct();
-                LibNative.operator_delete(this);
-            }
-
-            disposedValue = true;
+            return;
         }
+
+        if (_isOwner)
+        {
+            Destruct();
+            LibNative.operator_delete(this);
+        }
+
+        disposedValue = true;
     }
 
-    ~StdVector() => Dispose(disposing: false);
+    ~StdVector() => Dispose(false);
 
     public void Dispose()
     {
-        Dispose(disposing: true);
+        Dispose(true);
         GC.SuppressFinalize(this);
     }
 
@@ -127,7 +130,7 @@ public unsafe class StdVector<T> :
 
     public StdVector(nint ptr, bool isOwner = false)
     {
-        _pointer = (CxxVectorDesc*)ptr;
+        _pointer = (CxxVectorDesc*)ptr.ToPointer();
         _isOwner = isOwner;
     }
 
@@ -135,7 +138,9 @@ public unsafe class StdVector<T> :
     {
         CxxVectorDesc* ptr = vec._pointer;
         if (ptr is null)
+        {
             throw new NullReferenceException(nameof(vec._pointer));
+        }
 
         ulong size = vec.Size();
         _pointer = HeapAlloc<CxxVectorDesc>.New(default);
@@ -149,7 +154,9 @@ public unsafe class StdVector<T> :
     {
         CxxVectorDesc* ptr = vec.Target._pointer;
         if (ptr is null)
+        {
             throw new NullReferenceException(nameof(vec.Target._pointer));
+        }
 
         Destruct();
         First = vec.Target.First;
@@ -183,7 +190,7 @@ public unsafe class StdVector<T> :
 
     public StdVector()
     {
-        _pointer = (CxxVectorDesc*)Marshal.AllocHGlobal(sizeof(CxxVectorDesc));
+        _pointer = (CxxVectorDesc*)Marshal.AllocHGlobal(sizeof(CxxVectorDesc)).ToPointer();
         _isOwner = true;
         Unsafe.InitBlock(_pointer, 0, (uint)sizeof(CxxVectorDesc));
     }
@@ -200,7 +207,7 @@ public unsafe class StdVector<T> :
         {
             if (index > Capacity() - 1)
             {
-                throw new IndexOutOfRangeException("Index is greater than Capacity minus 1");
+                throw new IndexOutOfRangeException("Index is greater than Capacity minus one");
             }
 
             return ref First[index];
@@ -209,7 +216,7 @@ public unsafe class StdVector<T> :
 
     private size_t CalculateGrowth(size_t newSize)
     {
-        var oldCapacity = Capacity();
+        size_t oldCapacity = Capacity();
         if (oldCapacity > max_size - (oldCapacity / 2))
         {
             return max_size;
@@ -231,12 +238,14 @@ public unsafe class StdVector<T> :
         }
         ulong newCapacity = CalculateGrowth(Size() + 1);
         ulong oldSize = Size();
-        T* newVec = (T*)Marshal.AllocHGlobal((int)newCapacity * sizeof(T));
+        T* newVec = (T*)Marshal.AllocHGlobal((int)newCapacity * sizeof(T)).ToPointer();
         Unsafe.CopyBlock(newVec, First, (uint)(((int)oldSize) * sizeof(T)));
         Unsafe.Write(newVec + oldSize, val);
 
         if (First is not null)
-            Marshal.FreeHGlobal((nint)First);
+        {
+            Marshal.FreeHGlobal(new(First));
+        }
 
         First = newVec;
         Last = newVec + oldSize + 1;

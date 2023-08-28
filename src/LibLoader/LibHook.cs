@@ -8,17 +8,17 @@ public enum HookResult : int
     Success = 0
 }
 
-internal static class LibHook
+internal static partial class LibHook
 {
     private const string LibName = "libdobby";
 
-    [DllImport(LibName, EntryPoint = "DobbyHook", ExactSpelling = true)]
-    internal static extern unsafe HookResult Hook(
+    [LibraryImport(LibName, EntryPoint = "DobbyHook")]
+    internal static unsafe partial HookResult Hook(
         void* address,
         void* replace_func,
         out void* origin_func
     );
 
-    [DllImport(LibName, EntryPoint = "DobbyDestroy", ExactSpelling = true)]
-    internal static extern unsafe HookResult Unhook(void* address);
+    [LibraryImport(LibName, EntryPoint = "DobbyDestroy")]
+    internal static unsafe partial HookResult Unhook(void* address);
 }

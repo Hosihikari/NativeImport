@@ -16,7 +16,6 @@ internal static class NativeTypeFillerHelper
     public static unsafe bool TryGetDestructorFunctionPointer<TFiller>(out delegate* managed<TFiller*, void> result)
         where TFiller : unmanaged
     {
-        result = null;
         Type type = typeof(TFiller);
         foreach (Type t in type.GetInterfaces())
         {
@@ -31,6 +30,7 @@ internal static class NativeTypeFillerHelper
                 return true;
             }
         }
+        result = null;
         return false;
     }
 }

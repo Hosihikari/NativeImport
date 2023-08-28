@@ -6,7 +6,7 @@ public readonly unsafe struct ValuePointer<T> where T : unmanaged
 {
     private readonly nint _ptr;
 
-    public readonly ref T Target => ref Unsafe.AsRef<T>((void*)_ptr);
+    public readonly ref T Target => ref Unsafe.AsRef<T>(_ptr.ToPointer());
 
     private ValuePointer(nint ptr) => _ptr = ptr;
 

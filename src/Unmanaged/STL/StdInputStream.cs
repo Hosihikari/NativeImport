@@ -42,14 +42,15 @@ public class StdInputStream
     {
         unsafe
         {
-            if (_isOwner)
+            if (!_isOwner)
             {
-                if (_buffer is not null)
-                {
-                    NativeMemory.Free(_buffer);
-                }
-                LibNative.std_istream_delete(_pointer, _nativebuffer);
+                return;
             }
+            if (_buffer is not null)
+            {
+                NativeMemory.Free(_buffer);
+            }
+            LibNative.std_istream_delete(_pointer, _nativebuffer);
         }
     }
 
@@ -69,7 +70,7 @@ public class StdInputStream
 
             byte[] data = new ReadOnlySpan<byte>(buffer, bufferSize).ToArray();
             int end = data.AsSpan().IndexOf((byte)0);
-            if (end != -1)
+            if (end < 0)
             {
                 data = data.AsSpan(0, end).ToArray();
             }

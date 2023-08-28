@@ -26,7 +26,7 @@ public abstract class HookBase<TDelegate> : IHook
             {
                 return _orgIntPtr is null
                     ? throw new NullReferenceException("OrgIntPtr is zero, has the hook installed ?")
-                    : Marshal.GetDelegateForFunctionPointer<TDelegate>((nint)_orgIntPtr);
+                    : Marshal.GetDelegateForFunctionPointer<TDelegate>(new(_orgIntPtr));
             }
         });
         _hookedFuncInstance = new Lazy<TDelegate>(() =>

@@ -64,8 +64,8 @@ public class NativeFunc
         }
         unsafe
         {
-            HookResult result = Hook((void*)address, (void*)hook, out var orgPtr, out instance);
-            org = (nint)orgPtr;
+            HookResult result = Hook(address.ToPointer(), hook.ToPointer(), out void* orgPtr, out instance);
+            org = new(orgPtr);
             return result;
         }
     }

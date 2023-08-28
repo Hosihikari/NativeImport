@@ -2,33 +2,33 @@
 
 namespace Hosihikari.NativeInterop.LibLoader;
 
-public static class LibcHelper
+public static partial class LibcHelper
 {
     public const int RTLD_NOW = 0x002;
-    const string libc = "libc";
+    private const string LibName = "libc";
 
-    [DllImport(libc)]
-    public static extern nint Dlsym(nint handle, string symbol);
+    [LibraryImport(LibName, StringMarshalling = StringMarshalling.Utf16)]
+    public static partial nint Dlsym(nint handle, string symbol);
 
-    [DllImport(libc)]
-    public static extern nint Dlopen(string filename, int flags);
+    [LibraryImport(LibName, StringMarshalling = StringMarshalling.Utf16)]
+    public static partial nint Dlopen(string filename, int flags);
 
-    [DllImport(libc)]
-    public static extern int Dlclose(nint handle);
+    [LibraryImport(LibName)]
+    public static partial int Dlclose(nint handle);
 
-    [DllImport(libc, SetLastError = true)]
-    public static extern int Symlink(string target, string symlink);
+    [LibraryImport(LibName, SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
+    public static partial int Symlink(string target, string symlink);
 
-    [DllImport(libc)]
-    public static extern IntPtr Strerror(int errnum);
+    [LibraryImport(LibName)]
+    public static partial IntPtr Strerror(int errnum);
 
-    [DllImport(libc, SetLastError = true)]
-    public static extern long Readlink(
+    [LibraryImport(LibName, SetLastError = true)]
+    public static partial long Readlink(
         [MarshalAs(UnmanagedType.LPArray)] byte[] filename,
         [MarshalAs(UnmanagedType.LPArray)] byte[] buffer,
         long len
     );
 
-    [DllImport(libc, SetLastError = true)]
-    public static extern int Unlink(string path);
+    [LibraryImport(LibName, SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
+    public static partial int Unlink(string path);
 }

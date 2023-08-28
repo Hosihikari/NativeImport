@@ -54,13 +54,13 @@ public static class LinkUtils
         {
             throw new ArgumentException("Source and Target are the same");
         }
-        while (LibcHelper.Symlink(symlink: symlink, target: target) is not 0)
+        while (LibcHelper.Symlink(symlink, target) != nint.Zero)
         {
             int errno = Marshal.GetLastWin32Error();
             switch (errno)
             {
                 case Eintr:
-//retry
+                    //retry
                     continue;
                 case Eexist:
                     throw new IOException("File already exists");
@@ -110,7 +110,7 @@ public static class LinkUtils
             throw new ArgumentNullException(nameof(path));
         }
 
-        while (LibcHelper.Unlink(path) is not 0)
+        while (LibcHelper.Unlink(path) != nint.Zero)
         {
             int errno = Marshal.GetLastWin32Error();
             if (errno is Eintr)
