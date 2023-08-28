@@ -19,7 +19,7 @@ public class NativeFunc
         out HookInstance instance
     )
     {
-        var result = LibHook.Hook(address, hook, out org);
+        HookResult result = LibHook.Hook(address, hook, out org);
         instance = new HookInstance(address, org);
         return result;
     }
@@ -37,15 +37,12 @@ public class NativeFunc
         void* hook,
         out void* org,
         out HookInstance instance
-    )
-    {
-        return Hook(
+    ) => Hook(
             (HandleHelper.MainHandleHandle + offset).ToPointer(),
             hook,
             out org,
             out instance
         );
-    }
 
     /// <summary>
     /// Hook a function by its offset.
@@ -58,12 +55,16 @@ public class NativeFunc
     public static HookResult Hook(nint address, nint hook, out nint org, out HookInstance instance)
     {
         if (address == nint.Zero)
+        {
             throw new NullReferenceException(nameof(address));
+        }
         if (hook == nint.Zero)
+        {
             throw new NullReferenceException(nameof(hook));
+        }
         unsafe
         {
-            var result = Hook((void*)address, (void*)hook, out var orgPtr, out instance);
+            HookResult result = Hook((void*)address, (void*)hook, out var orgPtr, out instance);
             org = (nint)orgPtr;
             return result;
         }
@@ -77,8 +78,6 @@ public class NativeFunc
     /// <param name="org">The original function.</param>
     /// <returns>hook result (0 if succeed)</returns>
 
-    public static HookResult Hook(int offset, nint hook, out nint org, out HookInstance instance)
-    {
-        return Hook(HandleHelper.MainHandleHandle + offset, hook, out org, out instance);
-    }
+    public static HookResult Hook(int offset, nint hook, out nint org, out HookInstance instance) =>
+        Hook(HandleHelper.MainHandleHandle + offset, hook, out org, out instance);
 }

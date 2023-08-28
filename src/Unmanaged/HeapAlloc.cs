@@ -1,21 +1,21 @@
 ﻿using Hosihikari.NativeInterop.LibLoader;
 
-namespace Hosihikari.NativeInterop.UnsafeTypes;
+namespace Hosihikari.NativeInterop.Unmanaged;
 
-public readonly unsafe ref struct heap_alloc<T> where T : unmanaged
+public readonly unsafe ref struct HeapAlloc<T> where T : unmanaged
 {
-    private static readonly ulong size = (ulong)sizeof(T);
+    private static readonly ulong _size = (ulong)sizeof(T);
 
     public static T* New(in T val)
     {
-        T* ptr = (T*)LibNative.operator_new(size);
+        T* ptr = (T*)LibNative.operator_new(_size);
         *ptr = val;
         return ptr;
     }
 
     public static T* NewArray(ulong count, in T defaultVal = default)
     {
-        T* ptr, ret = ptr = (T*)LibNative.operator_new(count * size);
+        T* ptr, ret = ptr = (T*)LibNative.operator_new(count * _size);
         for (ulong i = 0; i < count; ++i)
         {
             *ptr = defaultVal;
@@ -29,7 +29,9 @@ public readonly unsafe ref struct heap_alloc<T> where T : unmanaged
     public static void Delete(T* ptr)
     {
         if (ptr is null)
+        {
             return;
+        }
 
         LibNative.operator_delete(ptr);
     }

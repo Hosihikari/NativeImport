@@ -1,4 +1,4 @@
-﻿namespace Hosihikari.NativeInterop.UnsafeTypes;
+﻿namespace Hosihikari.NativeInterop.Unmanaged;
 
 public interface ICppInstanceNonGeneric : IDisposable
 {
@@ -50,7 +50,7 @@ public static class Utils
     {
         if (releaseSrc)
         {
-            var temp = T.ConstructInstance(@this.Pointer, @this.IsOwner);
+            T temp = T.ConstructInstance(@this.Pointer, @this.IsOwner);
             @this.Pointer = 0;
             @this.IsOwner = false;
 
@@ -58,9 +58,6 @@ public static class Utils
 
             return temp;
         }
-        else
-        {
-            return T.ConstructInstance(@this.Pointer, false);
-        }
+        return T.ConstructInstance(@this.Pointer, false);
     }
 }

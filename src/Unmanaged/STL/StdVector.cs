@@ -1,10 +1,9 @@
-﻿using Hosihikari.NativeInterop.LibLoader;
-using Hosihikari.NativeInterop.UnsafeTypes;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Hosihikari.NativeInterop.LibLoader;
 using size_t = System.UInt64;
 
-namespace Hosihikari.NativeInterop.NativeTypes;
+namespace Hosihikari.NativeInterop.Unmanaged.STL;
 
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct CxxVectorDesc
@@ -27,7 +26,7 @@ public unsafe class StdVector<T> :
 {
 
     [StructLayout(LayoutKind.Explicit, Size = 24)]
-    public struct StdVectorFiller : INativeTypeFiller<StdVectorFiller, StdVector<T>>
+    public readonly struct StdVectorFiller : INativeTypeFiller<StdVectorFiller, StdVector<T>>
     {
         static StdVectorFiller()
         {
@@ -35,14 +34,16 @@ public unsafe class StdVector<T> :
         }
 
         [FieldOffset(0)]
-        private long alignment_member;
+        private readonly long _alignment_member;
 
         public static void Destruct(StdVectorFiller* @this) => DestructInstance((nint)@this);
 
         public static implicit operator StdVector<T>(in StdVectorFiller filler)
         {
             fixed (void* ptr = &filler)
+            {
                 return new StdVector<T>(ptr);
+            }
         }
     }
 
@@ -59,21 +60,25 @@ public unsafe class StdVector<T> :
 
     public static void DestructInstance(nint ptr)
     {
-        var p = (CxxVectorDesc*)ptr;
+        CxxVectorDesc* p = (CxxVectorDesc*)ptr;
 
         if (IsFiller)
         {
-            using var vector = new StdVector<T>(ptr);
-            var size = vector.Size();
+            using StdVector<T> vector = new StdVector<T>(ptr);
+            ulong size = vector.Size();
             for (size_t i = 0; i < size; ++i)
             {
-                fixed(T* currentPtr = & vector[i])
+                fixed (T* currentPtr = &vector[i])
+                {
                     DtorFptr(currentPtr);
+                }
             }
         }
 
         if (p is not null)
+        {
             LibNative.operator_delete(p);
+        }
 
         p->begin = null;
         p->end = null;
@@ -83,7 +88,7 @@ public unsafe class StdVector<T> :
     static object ICppInstanceNonGeneric.ConstructInstance(nint ptr, bool owns) => ConstructInstance(ptr, owns);
 
     public static StdVector<T> ConstructInstanceByCopy(StdVector<T> right) => new(right);
-    public static StdVector<T> ConstructInstanceByMove(move_handle<StdVector<T>> right) => new(right);
+    public static StdVector<T> ConstructInstanceByMove(MoveHandle<StdVector<T>> right) => new(right.Target);
 
 
     public static implicit operator nint(StdVector<T> vec) => (nint)vec._pointer;
@@ -128,21 +133,21 @@ public unsafe class StdVector<T> :
 
     public StdVector(StdVector<T> vec)
     {
-        var ptr = vec._pointer;
+        CxxVectorDesc* ptr = vec._pointer;
         if (ptr is null)
             throw new NullReferenceException(nameof(vec._pointer));
 
-        var size = vec.Size();
-        _pointer = heap_alloc<CxxVectorDesc>.New(default);
-        First = heap_alloc<T>.NewArray(size);
+        ulong size = vec.Size();
+        _pointer = HeapAlloc<CxxVectorDesc>.New(default);
+        First = HeapAlloc<T>.NewArray(size);
         Unsafe.CopyBlock(First, vec.First, (uint)size * (uint)sizeof(T));
         Last = First + size;
         End = Last + vec.Capacity();
     }
 
-    public StdVector(move_handle<StdVector<T>> vec)
+    public StdVector(MoveHandle<StdVector<T>> vec)
     {
-        var ptr = vec.Target._pointer;
+        CxxVectorDesc* ptr = vec.Target._pointer;
         if (ptr is null)
             throw new NullReferenceException(nameof(vec.Target._pointer));
 
@@ -194,7 +199,9 @@ public unsafe class StdVector<T> :
         get
         {
             if (index > Capacity() - 1)
-                throw new IndexOutOfRangeException("index > Capacity() - 1");
+            {
+                throw new IndexOutOfRangeException("Index is greater than Capacity minus 1");
+            }
 
             return ref First[index];
         }
@@ -203,41 +210,37 @@ public unsafe class StdVector<T> :
     private size_t CalculateGrowth(size_t newSize)
     {
         var oldCapacity = Capacity();
-        if (oldCapacity > max_size - oldCapacity / 2)
+        if (oldCapacity > max_size - (oldCapacity / 2))
+        {
             return max_size;
+        }
 
-        var geometric = oldCapacity + oldCapacity / 2;
+        ulong geometric = oldCapacity + (oldCapacity / 2);
 
-        if (geometric < newSize)
-            return newSize;
-
-        return geometric;
+        return geometric >= newSize ? geometric : newSize;
     }
 
     public ref T EmplaceBack(in T val)
     {
         if (Last != End)
         {
-            var last = Last;
+            T* last = Last;
             Unsafe.Write(last, val);
             ++Last;
             return ref Unsafe.AsRef<T>(last);
         }
-        else
-        {
-            var newCapacity = CalculateGrowth(Size() + 1);
-            var oldSize = Size();
-            var newVec = (T*)Marshal.AllocHGlobal((int)newCapacity * sizeof(T));
-            Unsafe.CopyBlock(newVec, First, (uint)(((int)oldSize) * sizeof(T)));
-            Unsafe.Write(newVec + oldSize, val);
+        ulong newCapacity = CalculateGrowth(Size() + 1);
+        ulong oldSize = Size();
+        T* newVec = (T*)Marshal.AllocHGlobal((int)newCapacity * sizeof(T));
+        Unsafe.CopyBlock(newVec, First, (uint)(((int)oldSize) * sizeof(T)));
+        Unsafe.Write(newVec + oldSize, val);
 
-            if (First is not null)
-                Marshal.FreeHGlobal((nint)First);
+        if (First is not null)
+            Marshal.FreeHGlobal((nint)First);
 
-            First = newVec;
-            Last = newVec + oldSize + 1;
-            End = newVec + newCapacity;
-            return ref Unsafe.AsRef<T>(newVec + oldSize);
-        }
+        First = newVec;
+        Last = newVec + oldSize + 1;
+        End = newVec + newCapacity;
+        return ref Unsafe.AsRef<T>(newVec + oldSize);
     }
 }

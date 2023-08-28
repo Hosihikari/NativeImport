@@ -1,12 +1,9 @@
-﻿using ELFSharp.MachO;
-using Hosihikari.NativeInterop.LibLoader;
-using Hosihikari.NativeInterop.UnsafeTypes;
-using Hosihikari.NativeInterop.Utils;
-using System.Collections;
-using System.Collections.Specialized;
+﻿using System.Collections;
 using System.Runtime.InteropServices;
+using Hosihikari.NativeInterop.LibLoader;
+using Hosihikari.NativeInterop.Utils;
 
-namespace Hosihikari.NativeInterop.NativeTypes;
+namespace Hosihikari.NativeInterop.Unmanaged.STL;
 
 public unsafe class StdString :
     IDisposable,
@@ -17,7 +14,7 @@ public unsafe class StdString :
 {
 
     [StructLayout(LayoutKind.Explicit, Size = 32)]
-    public struct StdStringFiller : INativeTypeFiller<StdStringFiller, StdString>
+    public readonly struct StdStringFiller : INativeTypeFiller<StdStringFiller, StdString>
     {
         static StdStringFiller()
         {
@@ -25,14 +22,16 @@ public unsafe class StdString :
         }
 
         [FieldOffset(0)]
-        private long alignment_member;
+        private readonly long _alignment_member;
 
         public static void Destruct(StdStringFiller* @this) => DestructInstance((nint)@this);
 
         public static implicit operator StdString(in StdStringFiller filler)
         {
             fixed (void* ptr = &filler)
+            {
                 return new StdString(ptr);
+            }
         }
     }
 
@@ -48,7 +47,7 @@ public unsafe class StdString :
     static object ICppInstanceNonGeneric.ConstructInstance(nint ptr, bool owns) => ConstructInstance(ptr, owns);
 
     public static StdString ConstructInstanceByCopy(StdString right) => new(right);
-    public static StdString ConstructInstanceByMove(move_handle<StdString> right) => new(right);
+    public static StdString ConstructInstanceByMove(MoveHandle<StdString> right) => new(right);
 
 
     public static implicit operator nint(StdString str) => (nint)str._pointer;
@@ -104,16 +103,20 @@ public unsafe class StdString :
     public StdString(StdString str)
     {
         if (str._pointer is null)
+        {
             throw new NullReferenceException(nameof(str._pointer));
+        }
 
         _pointer = LibNative.operator_new(ClassSize);
         LibNative.std_string_placement_new_copy(_pointer, str);
     }
 
-    public StdString(move_handle<StdString> str)
+    public StdString(MoveHandle<StdString> str)
     {
         if (str.Target._pointer is null)
+        {
             throw new NullReferenceException(nameof(str.Target._pointer));
+        }
 
         _pointer = LibNative.operator_new(ClassSize);
         LibNative.std_string_placement_new_move(_pointer, str.Target);
@@ -135,8 +138,8 @@ public unsafe class StdString :
     {
         get
         {
-            var ptr = LibNative.std_string_data(_pointer);
-            var len = LibNative.std_string_length(_pointer);
+            byte* ptr = LibNative.std_string_data(_pointer);
+            ulong len = LibNative.std_string_length(_pointer);
             if (ptr is null || len <= 0)
             {
                 return ReadOnlySpan<byte>.Empty;
@@ -193,7 +196,7 @@ public unsafe class StdString :
             length = str.Length;
         }
 
-        public byte Current
+        public readonly byte Current
         {
             get
             {
@@ -203,7 +206,7 @@ public unsafe class StdString :
             }
         }
 
-        object IEnumerator.Current => Current;
+        readonly object IEnumerator.Current => Current;
 
         public readonly void Dispose()
         {
@@ -213,13 +216,4 @@ public unsafe class StdString :
 
         public void Reset() => currentOffset = ulong.MaxValue;
     }
-
-    //public ref StdStringStruct GetPinnableReference()
-    //{
-    //    
-    //    {
-    //        return ref *(StdStringStruct*)_pointer;
-    //    }
-    //}
 }
-//public struct StdStringStruct { }

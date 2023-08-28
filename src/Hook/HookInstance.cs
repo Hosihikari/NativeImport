@@ -26,7 +26,7 @@ public class HookInstance
         unsafe
         {
             CheckActive();
-            var result = LibHook.Unhook(_address);
+            HookResult result = LibHook.Unhook(_address);
             if (result is HookResult.Success)
             {
                 _address = null;

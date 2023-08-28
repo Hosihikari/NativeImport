@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using Hosihikari.FastElfQuery;
+﻿using Hosihikari.FastElfQuery;
 
 namespace Hosihikari.NativeInterop;
 
@@ -7,18 +6,14 @@ public static class SymbolHelper
 {
     static SymbolHelper()
     {
-        Console.WriteLine("Loading symbol table...");
-        Stopwatch sw = Stopwatch.StartNew();
         SymbolTable = new ElfSymbolQueryTable("bedrock_server_symbols.debug");
-        sw.Stop();
-        Console.WriteLine($"Symbol table loaded in {sw.ElapsedMilliseconds}ms");
     }
 
     public static ElfSymbolQueryTable SymbolTable { get; }
 
     public static bool TryDlsym(string symbolName, out nint address)
     {
-        if (SymbolTable.TryQuery(symbolName, out var offset))
+        if (SymbolTable.TryQuery(symbolName, out int offset))
         {
             address = HandleHelper.MainHandleHandle + offset;
             return true;
@@ -29,27 +24,17 @@ public static class SymbolHelper
 
     public static unsafe bool TryDlsym(string symbolName, out void* address)
     {
-        if (SymbolTable.TryQuery(symbolName, out var offset))
-        {
-            address = (HandleHelper.MainHandleHandle + offset).ToPointer();
-            return true;
-        }
-        address = default;
-        return false;
+        bool result = TryDlsym(symbolName, out nint addressPtr);
+        address = addressPtr.ToPointer();
+        return result;
     }
 
-    public static nint Dlsym(string symbolName)
-    {
-        return SymbolTable.Query(symbolName) + HandleHelper.MainHandleHandle;
-    }
+    public static nint Dlsym(string symbolName) =>
+        SymbolTable.Query(symbolName) + HandleHelper.MainHandleHandle;
 
-    public static Lazy<nint> DlsymLazy(string symbolName)
-    {
-        return new Lazy<nint>(() => Dlsym(symbolName));
-    }
+    public static Lazy<nint> DlsymLazy(string symbolName) =>
+        new(() => Dlsym(symbolName));
 
-    public static unsafe void* DlsymPointer(string symbolName)
-    {
-        return (SymbolTable.Query(symbolName) + HandleHelper.MainHandleHandle).ToPointer();
-    }
+    public static unsafe void* DlsymPointer(string symbolName) =>
+        Dlsym(symbolName).ToPointer();
 }

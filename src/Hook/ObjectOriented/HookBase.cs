@@ -24,17 +24,15 @@ public abstract class HookBase<TDelegate> : IHook
         {
             unsafe
             {
-                if (_orgIntPtr is null)
-                    throw new NullReferenceException("OrgIntPtr is zero, has the hook installed ?");
-                return Marshal.GetDelegateForFunctionPointer<TDelegate>((nint)_orgIntPtr);
+                return _orgIntPtr is null
+                    ? throw new NullReferenceException("OrgIntPtr is zero, has the hook installed ?")
+                    : Marshal.GetDelegateForFunctionPointer<TDelegate>((nint)_orgIntPtr);
             }
         });
         _hookedFuncInstance = new Lazy<TDelegate>(() =>
         {
-            var hookedFunc = HookedFunc;
-            if (HookedFunc is null)
-                throw new NullReferenceException("HookedFunc");
-            return hookedFunc;
+            TDelegate hookedFunc = HookedFunc;
+            return HookedFunc is null ? throw new NullReferenceException("HookedFunc") : hookedFunc;
         });
     }
 
@@ -69,9 +67,13 @@ public abstract class HookBase<TDelegate> : IHook
             unsafe
             {
                 if (_address is null)
+                {
                     throw new NullReferenceException("Address or symbol is null.");
+                }
                 if (_orgIntPtr is not null || _handle is not null)
+                {
                     throw new HookAlreadyInstalledException();
+                }
                 //save handle for delegate, prevent gc
                 _handle = GCHandle.Alloc(_hookedFuncInstance.Value);
                 //get pointer of delegate
@@ -82,7 +84,7 @@ public abstract class HookBase<TDelegate> : IHook
                 if (
                     NativeFunc.Hook(_address, _hookedFuncPointer, out _orgIntPtr, out _instance)
                     is not HookResult.Success
-                        and var errCode
+                        and HookResult errCode
                 )
                 {
                     throw new HookInstalledFailedException(errCode);
@@ -111,20 +113,19 @@ public abstract class HookBase<TDelegate> : IHook
             unsafe
             {
                 if (_orgIntPtr is null || _instance is null)
+                {
                     throw new HookNotInstalledException();
+                }
                 //free delegate handle
                 _handle?.Free();
                 _handle = null;
                 //unhook and check if success, otherwise throw exception
-                if (_instance.Uninstall() is not HookResult.Success and var errCode)
+                if (_instance.Uninstall() is not HookResult.Success and HookResult errCode)
                 {
                     throw new HookUninstalledFailedException(errCode);
                 }
-                else
-                {
-                    _orgIntPtr = null;
-                    _instance = null;
-                }
+                _orgIntPtr = null;
+                _instance = null;
             }
         }
     }

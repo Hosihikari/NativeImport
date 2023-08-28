@@ -10,7 +10,7 @@ public enum HookResult : int
 
 internal static class LibHook
 {
-    private const string LibName = "libdobby.so";
+    private const string LibName = "libdobby";
 
     [DllImport(LibName, EntryPoint = "DobbyHook", ExactSpelling = true)]
     internal static extern unsafe HookResult Hook(

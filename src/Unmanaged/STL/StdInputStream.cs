@@ -1,10 +1,7 @@
-using System;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 using Hosihikari.NativeInterop.LibLoader;
 
-namespace Hosihikari.NativeInterop.NativeTypes;
+namespace Hosihikari.NativeInterop.Unmanaged.STL;
 
 /// <summary>
 /// std::istream wrapper
@@ -25,7 +22,7 @@ public class StdInputStream
         {
             _buffer = (byte*)NativeMemory.Alloc((nuint)data.Length);
             data.CopyTo(new Span<byte>(_buffer, data.Length));
-            LibLoader.LibNative.std_istream_new(
+            LibNative.std_istream_new(
                 _buffer,
                 data.Length,
                 out _pointer,
@@ -51,7 +48,7 @@ public class StdInputStream
                 {
                     NativeMemory.Free(_buffer);
                 }
-                LibLoader.LibNative.std_istream_delete(_pointer, _nativebuffer);
+                LibNative.std_istream_delete(_pointer, _nativebuffer);
             }
         }
     }
@@ -63,16 +60,15 @@ public class StdInputStream
         unsafe
         {
             const int bufferSize = 128;
-            var buffer = stackalloc byte[bufferSize];
+            byte* buffer = stackalloc byte[bufferSize];
             while (LibNative.std_istream_read(_pointer, buffer, bufferSize))
             {
                 writer.Write(new ReadOnlySpan<byte>(buffer, bufferSize).ToArray());
                 NativeMemory.Clear(buffer, bufferSize);
             }
 
-            var data = new ReadOnlySpan<byte>(buffer, bufferSize).ToArray();
-            //seek first \0 and trim end
-            var end = data.AsSpan().IndexOf((byte)0);
+            byte[] data = new ReadOnlySpan<byte>(buffer, bufferSize).ToArray();
+            int end = data.AsSpan().IndexOf((byte)0);
             if (end != -1)
             {
                 data = data.AsSpan(0, end).ToArray();

@@ -7,12 +7,12 @@ public static class StringUtils
 {
     public static unsafe string MarshalStdString(void* strPtr)
     {
-        var dataPtr = LibNative.std_string_data(strPtr);
+        byte* dataPtr = LibNative.std_string_data(strPtr);
         if (dataPtr is null)
         {
             return string.Empty;
         }
-        var len = LibNative.std_string_length(strPtr);
+        ulong len = LibNative.std_string_length(strPtr);
         if (len <= 0)
         {
             return string.Empty;
@@ -25,10 +25,8 @@ public static class StringUtils
     /// </summary>
     /// <param name="s"> string data </param>
     /// <returns>  null-terminated UTF-8 byte array </returns>
-    public static byte[] StringToManagedUtf8(string s)
-    {
-        return StringToManagedUtf8(s, out _);
-    }
+    public static byte[] StringToManagedUtf8(string s) =>
+        StringToManagedUtf8(s, out _);
 
     /// <summary>
     /// Converts a string to a null-terminated UTF-8 byte array.
@@ -43,11 +41,11 @@ public static class StringUtils
             length = 0;
             return new byte[] { 0 };
         }
-        var utf8 = Encoding.UTF8;
+        Encoding utf8 = Encoding.UTF8;
         fixed (char* ptr = s)
         {
             length = utf8.GetByteCount(ptr, s.Length);
-            var buffer = new byte[length + 1];
+            byte[] buffer = new byte[length + 1];
             fixed (byte* buf = buffer)
             {
                 utf8.GetBytes(ptr, s.Length, buf, length);
@@ -59,7 +57,7 @@ public static class StringUtils
 
     public static string Utf8ToString(ReadOnlySpan<byte> data)
     {
-        if (data.Length == 0)
+        if (data.Length <= 0)
         {
             return string.Empty;
         }

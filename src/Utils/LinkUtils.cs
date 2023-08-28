@@ -1,6 +1,4 @@
 ﻿using System.Buffers;
-using System.Diagnostics;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using Hosihikari.NativeInterop.LibLoader;
@@ -14,43 +12,55 @@ public static class LinkUtils
 
     public static void CreateFileSymlink(string symlink, string pointingTo)
     {
-        if (symlink == null)
+        if (symlink is null)
+        {
             throw new ArgumentNullException(nameof(symlink));
-        if (pointingTo == null)
+        }
+        if (pointingTo is null)
+        {
             throw new ArgumentNullException(nameof(pointingTo));
+        }
 
         if (!File.Exists(pointingTo))
+        {
             throw new FileNotFoundException(new FileNotFoundException().Message, pointingTo);
+        }
 
-        CreateSymlinkInternal(symlink, target: pointingTo);
+        CreateSymlinkInternal(symlink, pointingTo);
     }
 
     public static void CreateDirectorySymlink(string symlink, string pointingTo)
     {
-        if (symlink == null)
+        if (symlink is null)
+        {
             throw new ArgumentNullException(nameof(symlink));
-        if (pointingTo == null)
+        }
+        if (pointingTo is null)
+        {
             throw new ArgumentNullException(nameof(pointingTo));
+        }
 
         if (!Directory.Exists(pointingTo))
+        {
             throw new DirectoryNotFoundException();
+        }
 
-        CreateSymlinkInternal(symlink, target: pointingTo);
+        CreateSymlinkInternal(symlink, pointingTo);
     }
 
     static void CreateSymlinkInternal(string symlink, string target)
     {
         if (symlink == target)
-            throw new ArgumentException("Source and Target are the same");
-        while (true)
         {
-            if (LibcHelper.symlink(symlink: symlink, target: target) == 0)
-                return;
+            throw new ArgumentException("Source and Target are the same");
+        }
+        while (LibcHelper.Symlink(symlink: symlink, target: target) is not 0)
+        {
             int errno = Marshal.GetLastWin32Error();
             switch (errno)
             {
                 case Eintr:
-                    //retry
+//retry
                     continue;
                 case Eexist:
                     throw new IOException("File already exists");
@@ -61,7 +71,7 @@ public static class LinkUtils
     }
 
     static int ParseHResult(int errno) =>
-        (errno & 0x80000000) == 0x80000000
+        (errno & 0x80000000) is 0x80000000
             ? errno
             : (errno & 0x0000FFFF) | unchecked((int)0x80070000);
 
@@ -69,15 +79,15 @@ public static class LinkUtils
 
     public static string ReadLink(string symlinkPath)
     {
-        var symlinkSize = Encoding.UTF8.GetByteCount(symlinkPath);
-        var symlink = ArrayPool<byte>.Shared.Rent(symlinkSize + 1);
-        var buffer = ArrayPool<byte>.Shared.Rent(BufferSize);
+        int symlinkSize = Encoding.UTF8.GetByteCount(symlinkPath);
+        byte[] symlink = ArrayPool<byte>.Shared.Rent(symlinkSize + 1);
+        byte[] buffer = ArrayPool<byte>.Shared.Rent(BufferSize);
         try
         {
             Encoding.UTF8.GetBytes(symlinkPath, 0, symlinkPath.Length, symlink, 0);
             symlink[symlinkSize] = 0;
 
-            var size = LibcHelper.readlink(symlink, buffer, BufferSize);
+            long size = LibcHelper.Readlink(symlink, buffer, BufferSize);
             return Encoding.UTF8.GetString(buffer, 0, (int)size);
         }
         finally
@@ -89,22 +99,24 @@ public static class LinkUtils
 
     public static bool IsLink(string path)
     {
-        var attributes = File.GetAttributes(path);
-        return (attributes & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint;
+        FileAttributes attributes = File.GetAttributes(path);
+        return (attributes & FileAttributes.ReparsePoint) is FileAttributes.ReparsePoint;
     }
 
     public static void Unlink(string path)
     {
-        if (path == null)
-            throw new ArgumentNullException(nameof(path));
-
-        while (true)
+        if (path is null)
         {
-            if (LibcHelper.unlink(path) == 0)
-                return;
+            throw new ArgumentNullException(nameof(path));
+        }
+
+        while (LibcHelper.Unlink(path) is not 0)
+        {
             int errno = Marshal.GetLastWin32Error();
-            if (errno == Eintr)
+            if (errno is Eintr)
+            {
                 continue; //retry
+            }
             int hResult = ParseHResult(errno);
             Marshal.ThrowExceptionForHR(hResult);
         }

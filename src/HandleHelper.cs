@@ -7,7 +7,7 @@ public class HandleHelper
     private static readonly Lazy<nint> LazyHandle =
         new(() =>
         {
-            var cp = Process.GetCurrentProcess();
+            Process cp = Process.GetCurrentProcess();
             return cp.MainModule!.BaseAddress;
         });
 
