@@ -1,5 +1,7 @@
 ﻿namespace Hosihikari.NativeInterop.Unmanaged.Attributes;
 
-internal class VirtualCppClassAttribute
+[AttributeUsage(AttributeTargets.Class)]
+public class VirtualCppClassAttribute : Attribute
 {
+    public VirtualCppClassAttribute() { }
 }
