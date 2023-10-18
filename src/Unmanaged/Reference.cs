@@ -4,7 +4,7 @@ public readonly unsafe struct Reference<T> where T : class, ICppInstance<T>
 {
     private readonly nint _ptr;
 
-    public readonly T Target => T.ConstructInstance(_ptr, false);
+    public readonly T Target => T.ConstructInstance(_ptr, false, false);
 
     private Reference(nint ptr) => _ptr = ptr;
 

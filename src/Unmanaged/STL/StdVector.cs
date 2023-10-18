@@ -56,9 +56,12 @@ public unsafe class StdVector<T> :
     public static ulong ClassSize => 24ul;
 
     public bool IsOwner { get => _isOwner; set => _isOwner = value; }
+
+    public bool IsTempStackValue { get; set; }
+
     public nint Pointer { get => new(_pointer); set => _pointer = (CxxVectorDesc*)value.ToPointer(); }
 
-    public static StdVector<T> ConstructInstance(nint ptr, bool owns) => new(ptr, owns);
+    public static StdVector<T> ConstructInstance(nint ptr, bool owns, bool isTempStackValue) => new(ptr, owns, isTempStackValue);
 
     public static void DestructInstance(nint ptr)
     {
@@ -87,7 +90,7 @@ public unsafe class StdVector<T> :
         p->end_cap = null;
     }
 
-    static object ICppInstanceNonGeneric.ConstructInstance(nint ptr, bool owns) => ConstructInstance(ptr, owns);
+    static object ICppInstanceNonGeneric.ConstructInstance(nint ptr, bool owns, bool isTempStackValue) => ConstructInstance(ptr, owns, isTempStackValue);
 
     public static StdVector<T> ConstructInstanceByCopy(StdVector<T> right) => new(right);
     public static StdVector<T> ConstructInstanceByMove(MoveHandle<StdVector<T>> right) => new(right.Target);
@@ -128,7 +131,7 @@ public unsafe class StdVector<T> :
     private bool disposedValue;
 
 
-    public StdVector(nint ptr, bool isOwner = false)
+    public StdVector(nint ptr, bool isOwner = false, bool isTempStackValue = true)
     {
         _pointer = (CxxVectorDesc*)ptr.ToPointer();
         _isOwner = isOwner;
@@ -148,24 +151,29 @@ public unsafe class StdVector<T> :
         Unsafe.CopyBlock(First, vec.First, (uint)size * (uint)sizeof(T));
         Last = First + size;
         End = Last + vec.Capacity();
+
+        _isOwner = true;
+        IsTempStackValue = false;
     }
 
     public StdVector(MoveHandle<StdVector<T>> vec)
     {
-        CxxVectorDesc* ptr = vec.Target._pointer;
-        if (ptr is null)
-        {
-            throw new NullReferenceException(nameof(vec.Target._pointer));
-        }
+        throw new NotImplementedException();
 
-        Destruct();
-        First = vec.Target.First;
-        Last = vec.Target.Last;
-        End = vec.Target.End;
+        //CxxVectorDesc* ptr = vec.Target._pointer;
+        //if (ptr is null)
+        //{
+        //    throw new NullReferenceException(nameof(vec.Target._pointer));
+        //}
 
-        vec.Target.First = null;
-        vec.Target.Last = null;
-        vec.Target.End = null;
+        //Destruct();
+        //First = vec.Target.First;
+        //Last = vec.Target.Last;
+        //End = vec.Target.End;
+
+        //vec.Target.First = null;
+        //vec.Target.Last = null;
+        //vec.Target.End = null;
     }
 
 
@@ -180,12 +188,14 @@ public unsafe class StdVector<T> :
     {
         _pointer = (CxxVectorDesc*)pointer.ToPointer();
         _isOwner = false;
+        IsTempStackValue = true;
     }
 
     public StdVector(void* pointer)
     {
         _pointer = (CxxVectorDesc*)pointer;
         _isOwner = false;
+        IsTempStackValue = true;
     }
 
     public StdVector()

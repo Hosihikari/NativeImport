@@ -6,7 +6,7 @@ public readonly unsafe struct Pointer<T> where T : class, ICppInstance<T>
 {
     private readonly nint _ptr;
 
-    public readonly T Target => T.ConstructInstance(_ptr, false);
+    public readonly T Target => T.ConstructInstance(_ptr, false, false);
 
     private Pointer(nint ptr) => _ptr = ptr;
 

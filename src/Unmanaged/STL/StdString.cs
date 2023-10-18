@@ -40,11 +40,14 @@ public unsafe class StdString :
     public bool IsOwner { get => _isOwner; set => _isOwner = value; }
     public nint Pointer { get => new(_pointer); set => _pointer = value.ToPointer(); }
 
-    public static StdString ConstructInstance(nint ptr, bool owns) => new(ptr, owns);
+    public bool IsTempStackValue { get; set; }
+
+
+    public static StdString ConstructInstance(nint ptr, bool owns, bool isTempStackValue) => new(ptr, owns, isTempStackValue);
 
     public static void DestructInstance(nint ptr) => LibNative.std_string_destructor(ptr.ToPointer());
 
-    static object ICppInstanceNonGeneric.ConstructInstance(nint ptr, bool owns) => ConstructInstance(ptr, owns);
+    static object ICppInstanceNonGeneric.ConstructInstance(nint ptr, bool owns, bool isTempStackValue) => ConstructInstance(ptr, owns, isTempStackValue);
 
     public static StdString ConstructInstanceByCopy(StdString right) => new(right);
     public static StdString ConstructInstanceByMove(MoveHandle<StdString> right) => new(right);
@@ -58,16 +61,9 @@ public unsafe class StdString :
 
     protected virtual void Dispose(bool disposing)
     {
-        if (disposedValue)
-        {
-            return;
-        }
-
-        if (_isOwner)
-        {
-            Destruct();
-            LibNative.operator_delete(this);
-        }
+        if (disposedValue) return;
+        if (_isOwner) Destruct();
+        if (IsTempStackValue is false) LibNative.operator_delete(this);
 
         disposedValue = true;
     }
@@ -90,6 +86,7 @@ public unsafe class StdString :
     {
         _pointer = LibNative.std_string_new();
         _isOwner = true;
+        IsTempStackValue = false;
     }
 
     public StdString(string str)
@@ -123,16 +120,18 @@ public unsafe class StdString :
         LibNative.std_string_placement_new_move(_pointer, str.Target);
     }
 
-    public StdString(nint pointer, bool isOwner = false)
+    public StdString(nint pointer, bool isOwner = false, bool isTempStackValue = true)
     {
         _pointer = pointer.ToPointer();
         _isOwner = isOwner;
+        IsTempStackValue = isTempStackValue;
     }
 
     public StdString(void* pointer)
     {
         _pointer = pointer;
         _isOwner = false;
+        IsTempStackValue = true;
     }
 
     public ReadOnlySpan<byte> Data

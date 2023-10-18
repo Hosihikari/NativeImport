@@ -12,6 +12,11 @@ public interface ICppInstanceNonGeneric : IDisposable
     /// </summary>
     public bool IsOwner { get; set; }
 
+    /// <summary>
+    /// noexcept
+    /// </summary>
+    public bool IsTempStackValue { get; set; }
+
     public void Destruct();
 
 
@@ -22,13 +27,13 @@ public interface ICppInstanceNonGeneric : IDisposable
 
     public static abstract void DestructInstance(nint ptr);
 
-    public static abstract object ConstructInstance(nint ptr, bool owns);
+    public static abstract object ConstructInstance(nint ptr, bool owns, bool isTempStackValue);
 }
 
 public interface ICppInstance<TSelf> : ICppInstanceNonGeneric
     where TSelf : class, ICppInstance<TSelf>
 {
-    public new static abstract TSelf ConstructInstance(nint ptr, bool owns);
+    public new static abstract TSelf ConstructInstance(nint ptr, bool owns, bool isTempStackValue);
 
     /// <summary>
     /// noexcept
@@ -50,14 +55,15 @@ public static class Utils
     {
         if (releaseSrc)
         {
-            T temp = T.ConstructInstance(@this.Pointer, @this.IsOwner);
+            T temp = T.ConstructInstance(@this.Pointer, @this.IsOwner, @this.IsTempStackValue);
             @this.Pointer = 0;
             @this.IsOwner = false;
+            @this.IsTempStackValue = false;
 
             @this.Dispose();
 
             return temp;
         }
-        return T.ConstructInstance(@this.Pointer, false);
+        return T.ConstructInstance(@this.Pointer, false, true);
     }
 }
