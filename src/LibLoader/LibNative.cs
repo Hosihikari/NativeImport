@@ -1,11 +1,11 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using size_t = System.UInt64;
 
 namespace Hosihikari.NativeInterop.LibLoader;
 
 internal static partial class LibNative
 {
-    internal const string LibName = "libnative";
+    internal const string LibName = "liblayer";
 
     #region memory
     [LibraryImport(LibName, EntryPoint = "operator_new")]
