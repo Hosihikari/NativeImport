@@ -9,7 +9,6 @@
 
   <ItemGroup>
     <PackageReference Include="Hosihikari.FastElfQuery" Version="1.0.0" />
-    <PackageReference Include="Hosihikari.PluginManager" Version="1.0.4" />
   </ItemGroup>
 
   <ItemGroup>
