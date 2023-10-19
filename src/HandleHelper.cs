@@ -2,14 +2,17 @@
 
 namespace Hosihikari.NativeInterop;
 
-public class HandleHelper
+public static class HandleHelper
 {
-    private static readonly Lazy<nint> LazyHandle =
-        new(() =>
-        {
-            Process cp = Process.GetCurrentProcess();
-            return cp.MainModule!.BaseAddress;
-        });
+    static HandleHelper() =>
+        LazyHandle =
+            new(() =>
+            {
+                Process cp = Process.GetCurrentProcess();
+                return cp.MainModule!.BaseAddress;
+            });
+
+    private static readonly Lazy<nint> LazyHandle;
 
     /// <summary>
     /// The handle of the main module (bedrock_server).

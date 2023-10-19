@@ -1,10 +1,9 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Hosihikari.NativeInterop.LibLoader;
+namespace Hosihikari.NativeInterop.Layer;
 
-public static partial class LibcHelper
+public static partial class LibC
 {
-    public const int RTLD_NOW = 0x002;
     private const string LibName = "libc";
 
     [LibraryImport(LibName, StringMarshalling = StringMarshalling.Utf16)]

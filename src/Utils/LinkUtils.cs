@@ -1,7 +1,7 @@
 ﻿using System.Buffers;
 using System.Runtime.InteropServices;
 using System.Text;
-using Hosihikari.NativeInterop.LibLoader;
+using Hosihikari.NativeInterop.Layer;
 
 namespace Hosihikari.NativeInterop.Utils;
 
@@ -48,15 +48,15 @@ public static class LinkUtils
         CreateSymlinkInternal(symlink, pointingTo);
     }
 
-    static void CreateSymlinkInternal(string symlink, string target)
+    private static void CreateSymlinkInternal(string symlink, string target)
     {
         if (symlink == target)
         {
             throw new ArgumentException("Source and Target are the same");
         }
-        while (LibcHelper.Symlink(symlink, target) != nint.Zero)
+        while (LibC.Symlink(symlink, target) != nint.Zero)
         {
-            int errno = Marshal.GetLastWin32Error();
+            int errno = Marshal.GetLastPInvokeError();
             switch (errno)
             {
                 case Eintr:
@@ -70,7 +70,7 @@ public static class LinkUtils
         }
     }
 
-    static int ParseHResult(int errno) =>
+    private static int ParseHResult(int errno) =>
         (errno & 0x80000000) is 0x80000000
             ? errno
             : (errno & 0x0000FFFF) | unchecked((int)0x80070000);
@@ -87,7 +87,7 @@ public static class LinkUtils
             Encoding.UTF8.GetBytes(symlinkPath, 0, symlinkPath.Length, symlink, 0);
             symlink[symlinkSize] = 0;
 
-            long size = LibcHelper.Readlink(symlink, buffer, BufferSize);
+            long size = LibC.Readlink(symlink, buffer, BufferSize);
             return Encoding.UTF8.GetString(buffer, 0, (int)size);
         }
         finally
@@ -110,9 +110,9 @@ public static class LinkUtils
             throw new ArgumentNullException(nameof(path));
         }
 
-        while (LibcHelper.Unlink(path) != nint.Zero)
+        while (LibC.Unlink(path) != nint.Zero)
         {
-            int errno = Marshal.GetLastWin32Error();
+            int errno = Marshal.GetLastPInvokeError();
             if (errno is Eintr)
             {
                 continue; //retry

@@ -1,4 +1,4 @@
-﻿using Hosihikari.NativeInterop.LibLoader;
+﻿using Hosihikari.NativeInterop.Layer;
 
 namespace Hosihikari.NativeInterop.Hook.ObjectOriented;
 

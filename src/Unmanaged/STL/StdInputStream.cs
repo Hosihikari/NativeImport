@@ -1,5 +1,5 @@
 using System.Runtime.InteropServices;
-using Hosihikari.NativeInterop.LibLoader;
+using Hosihikari.NativeInterop.Layer;
 
 namespace Hosihikari.NativeInterop.Unmanaged.STL;
 

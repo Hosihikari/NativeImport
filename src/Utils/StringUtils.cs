@@ -1,10 +1,28 @@
 ﻿using System.Text;
-using Hosihikari.NativeInterop.LibLoader;
+using Hosihikari.NativeInterop.Layer;
 
 namespace Hosihikari.NativeInterop.Utils;
 
 public static class StringUtils
 {
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="strPtr"></param>
+    /// <returns></returns>
+    public static string MarshalStdString(nint strPtr)
+    {
+        unsafe
+        {
+            return MarshalStdString(strPtr.ToPointer());
+        }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="strPtr"></param>
+    /// <returns></returns>
     public static unsafe string MarshalStdString(void* strPtr)
     {
         byte* dataPtr = LibNative.std_string_data(strPtr);
@@ -13,11 +31,7 @@ public static class StringUtils
             return string.Empty;
         }
         ulong len = LibNative.std_string_length(strPtr);
-        if (len <= 0)
-        {
-            return string.Empty;
-        }
-        return Encoding.UTF8.GetString(dataPtr, (int)len);
+        return len <= 0 ? string.Empty : Encoding.UTF8.GetString(dataPtr, (int)len);
     }
 
     /// <summary>
@@ -55,12 +69,11 @@ public static class StringUtils
         }
     }
 
-    public static string Utf8ToString(ReadOnlySpan<byte> data)
-    {
-        if (data.Length <= 0)
-        {
-            return string.Empty;
-        }
-        return Encoding.UTF8.GetString(data);
-    }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    public static string Utf8ToString(ReadOnlySpan<byte> data) =>
+        data.Length <= 0 ? string.Empty : Encoding.UTF8.GetString(data);
 }

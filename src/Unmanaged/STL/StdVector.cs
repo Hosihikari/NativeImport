@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Hosihikari.NativeInterop.LibLoader;
+using Hosihikari.NativeInterop.Layer;
 using size_t = System.UInt64;
 
 namespace Hosihikari.NativeInterop.Unmanaged.STL;

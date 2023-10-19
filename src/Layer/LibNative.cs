@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using size_t = System.UInt64;
 
-namespace Hosihikari.NativeInterop.LibLoader;
+namespace Hosihikari.NativeInterop.Layer;
 
 internal static partial class LibNative
 {

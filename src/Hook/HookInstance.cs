@@ -1,4 +1,4 @@
-using Hosihikari.NativeInterop.LibLoader;
+using Hosihikari.NativeInterop.Layer;
 
 namespace Hosihikari.NativeInterop.Hook;
 
@@ -27,11 +27,12 @@ public class HookInstance
         {
             CheckActive();
             HookResult result = LibHook.Unhook(_address);
-            if (result is HookResult.Success)
+            if (result is not HookResult.Success)
             {
-                _address = null;
-                _original = null;
+                return result;
             }
+            _address = null;
+            _original = null;
             return result;
         }
     }

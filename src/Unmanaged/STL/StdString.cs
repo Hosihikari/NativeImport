@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 using System.Runtime.InteropServices;
-using Hosihikari.NativeInterop.LibLoader;
+using Hosihikari.NativeInterop.Layer;
 using Hosihikari.NativeInterop.Utils;
 
 namespace Hosihikari.NativeInterop.Unmanaged.STL;
