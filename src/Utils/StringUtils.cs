@@ -31,7 +31,7 @@ public static class StringUtils
             return string.Empty;
         }
         ulong len = LibNative.std_string_length(strPtr);
-        return len <= 0 ? string.Empty : Encoding.UTF8.GetString(dataPtr, (int)len);
+        return len > 0 ? Encoding.UTF8.GetString(dataPtr, (int)len) : string.Empty;
     }
 
     /// <summary>
@@ -75,5 +75,5 @@ public static class StringUtils
     /// <param name="data"></param>
     /// <returns></returns>
     public static string Utf8ToString(ReadOnlySpan<byte> data) =>
-        data.Length <= 0 ? string.Empty : Encoding.UTF8.GetString(data);
+        data.Length > 0 ? Encoding.UTF8.GetString(data) : string.Empty;
 }

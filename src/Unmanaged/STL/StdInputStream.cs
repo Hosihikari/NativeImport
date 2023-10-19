@@ -70,7 +70,7 @@ public class StdInputStream
 
             byte[] data = new ReadOnlySpan<byte>(buffer, bufferSize).ToArray();
             int end = data.AsSpan().IndexOf((byte)0);
-            if (end >= 0)
+            if (end > 0)
             {
                 data = data.AsSpan(0, end).ToArray();
             }

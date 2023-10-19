@@ -25,7 +25,7 @@ public abstract class HookBase<TDelegate> : IHook
             unsafe
             {
                 return _orgIntPtr is null
-                    ? throw new NullReferenceException("OrgIntPtr is zero, has the hook installed ?")
+                    ? throw new NullReferenceException("OrgIntPtr is zero, has the hook installed?")
                     : Marshal.GetDelegateForFunctionPointer<TDelegate>(new(_orgIntPtr));
             }
         });
@@ -82,7 +82,7 @@ public abstract class HookBase<TDelegate> : IHook
                     .ToPointer();
                 //hook and check if success, otherwise throw exception
                 if (
-                    NativeFunc.Hook(_address, _hookedFuncPointer, out _orgIntPtr, out _instance)
+                    Function.Hook(_address, _hookedFuncPointer, out _orgIntPtr, out _instance)
                     is not HookResult.Success
                         and HookResult errCode
                 )

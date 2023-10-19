@@ -2,7 +2,7 @@
 
 namespace Hosihikari.NativeInterop.Hook;
 
-public static class NativeFunc
+public static class Function
 {
     /// <summary>
     /// Hook a function by its address.
