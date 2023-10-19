@@ -9,5 +9,17 @@
 
   <ItemGroup>
     <PackageReference Include="Hosihikari.FastElfQuery" Version="1.0.0" />
+    <PackageReference Include="Hosihikari.PluginManager" Version="1.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\lib\libdobby.so">
+      <Link>libdobby.so</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\liblayer.so">
+      <Link>liblayer.so</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 </Project>
