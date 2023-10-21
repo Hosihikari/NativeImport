@@ -47,23 +47,3 @@ public interface ICppInstance<TSelf> : ICppInstanceNonGeneric
     /// <param name="ins"></param>
     public static unsafe abstract implicit operator void*(TSelf ins);
 }
-
-public static class Utils
-{
-    public static T As<T>(this ICppInstanceNonGeneric @this, bool releaseSrc = false)
-        where T : class, IDisposable, ICppInstance<T>
-    {
-        if (releaseSrc)
-        {
-            T temp = T.ConstructInstance(@this.Pointer, @this.IsOwner, @this.IsTempStackValue);
-            @this.Pointer = 0;
-            @this.IsOwner = false;
-            @this.IsTempStackValue = false;
-
-            @this.Dispose();
-
-            return temp;
-        }
-        return T.ConstructInstance(@this.Pointer, false, true);
-    }
-}
