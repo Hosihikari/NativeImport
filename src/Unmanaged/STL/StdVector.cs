@@ -1,12 +1,14 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
+using Hosihikari.NativeInterop.Generation;
 using Hosihikari.NativeInterop.Layer;
 using size_t = System.UInt64;
 
 namespace Hosihikari.NativeInterop.Unmanaged.STL;
 
 [StructLayout(LayoutKind.Sequential)]
-internal unsafe struct CxxVectorDesc
+public unsafe struct CxxVectorDesc
 {
     public void* begin;
 
@@ -16,17 +18,33 @@ internal unsafe struct CxxVectorDesc
     public void* end_cap;
 }
 
-public unsafe class StdVector<T> :
+public struct Unknown { }
+
+public unsafe partial class StdVector<T> :
     IDisposable,
     ICppInstance<StdVector<T>>,
     IMoveableCppInstance<StdVector<T>>,
-    ICopyableCppInstance<StdVector<T>>
+    ICopyableCppInstance<StdVector<T>>,
+    ITypeReferenceProvider
     where T : unmanaged
 {
 
-    [StructLayout(LayoutKind.Explicit, Size = 24)]
-    public readonly struct StdVectorFiller : INativeTypeFiller<StdVectorFiller, StdVector<T>>
+#if LINUX
+    internal static partial Regex StdVectorRegex() => throw new NotImplementedException();
+#else
+    [GeneratedRegex("^std::vector<(?<class_type>.*), class std::allocator<(\\k<class_type>)>>")]
+    internal static partial Regex StdVectorRegex();
+#endif
+
+    public static Regex Regex => StdVectorRegex();
+
+    public static Type? Matched(Match match) =>
+        typeof(StdVector<Unknown>.StdVectorFiller);
+
+    public struct StdVectorFiller : INativeTypeFiller<StdVectorFiller, StdVector<T>>
     {
+        public CxxVectorDesc cxxVector;
+
         static StdVectorFiller()
         {
             if (sizeof(StdVectorFiller) != 24)
@@ -35,8 +53,6 @@ public unsafe class StdVector<T> :
             }
         }
 
-        [FieldOffset(0)]
-        private readonly long _alignment_member;
 
         public static void Destruct(StdVectorFiller* @this) => DestructInstance(new(@this));
 

@@ -6,5 +6,5 @@ public interface ITypeReferenceProvider
 {
     public static abstract Regex Regex { get; }
 
-    public static abstract Type Matched(Regex regex);
+    public static abstract Type? Matched(Match match);
 }

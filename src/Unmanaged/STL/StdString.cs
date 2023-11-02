@@ -1,18 +1,23 @@
 ﻿using System.Collections;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
+using Hosihikari.NativeInterop.Generation;
 using Hosihikari.NativeInterop.Layer;
 using Hosihikari.NativeInterop.Utils;
+using static Hosihikari.NativeInterop.Generation.ITypeReferenceProvider;
 
 namespace Hosihikari.NativeInterop.Unmanaged.STL;
 
-public unsafe class StdString :
+[PredefinedType(
+    NativeTypeName = "basic_string<char, struct std::char_traits<char>, class std::allocator<char>>",
+    NativeTypeNamespace = "std")]
+public unsafe partial class StdString :
     IDisposable,
     ICppInstance<StdString>,
     IMoveableCppInstance<StdString>,
     ICopyableCppInstance<StdString>,
     IEnumerable<byte>
 {
-
     [StructLayout(LayoutKind.Explicit, Size = 32)]
     public readonly struct StdStringFiller : INativeTypeFiller<StdStringFiller, StdString>
     {
@@ -25,6 +30,14 @@ public unsafe class StdString :
         private readonly long _alignment_member;
 
         public static void Destruct(StdStringFiller* @this) => DestructInstance(new(@this));
+
+        public void Destruct()
+        {
+            fixed (StdStringFiller* ptr = &this)
+            {
+                Destruct(ptr);
+            }
+        }
 
         public static implicit operator StdString(in StdStringFiller filler)
         {
