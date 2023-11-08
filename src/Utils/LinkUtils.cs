@@ -1,4 +1,6 @@
-﻿using System.Buffers;
+﻿#if LINUX
+
+using System.Buffers;
 using System.Runtime.InteropServices;
 using System.Text;
 using Hosihikari.NativeInterop.Layer;
@@ -122,3 +124,4 @@ public static class LinkUtils
         }
     }
 }
+#endif

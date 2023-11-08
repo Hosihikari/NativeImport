@@ -5,7 +5,11 @@ namespace Hosihikari.NativeInterop.Layer;
 
 internal static partial class LibNative
 {
+#if LINUX
     internal const string LibName = "liblayer";
+#else
+    internal const string LibName = "Hosihikari.Preload";
+#endif
 
     #region memory
     [LibraryImport(LibName, EntryPoint = "operator_new")]

@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿#if LINUX
+using System.Runtime.InteropServices;
 
 namespace Hosihikari.NativeInterop.Layer;
 
@@ -31,3 +32,4 @@ public static partial class LibC
     [LibraryImport(LibName, SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
     public static partial int Unlink(string path);
 }
+#endif
