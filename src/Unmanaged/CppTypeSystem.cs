@@ -116,9 +116,7 @@ public unsafe interface INativeVirtualMethodOverrideProvider<T, TVtable>
             var overrideAttr = method.GetCustomAttribute<OverrideAttribute>();
             if (overrideAttr is null) continue;
 
-            var unmanagedOnlyAttr = method.GetCustomAttribute<UnmanagedCallersOnlyAttribute>();
-            if (unmanagedOnlyAttr is null) continue;
-
+            _ = method.GetCustomAttribute<UnmanagedCallersOnlyAttribute>() ?? throw new InvalidProgramException();
             list.Add((overrideAttr.VirtualMethodIndex, method.MethodHandle.GetFunctionPointer()));
         }
 

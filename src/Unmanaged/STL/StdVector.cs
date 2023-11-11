@@ -8,7 +8,7 @@ using size_t = System.UInt64;
 namespace Hosihikari.NativeInterop.Unmanaged.STL;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct CxxVectorDesc
+public unsafe partial struct CxxVectorDesc : ITypeReferenceProvider
 {
     public void* begin;
 
@@ -16,18 +16,6 @@ public unsafe struct CxxVectorDesc
 
     //compressed_pair<pointer,allocator<T>>
     public void* end_cap;
-}
-
-public struct Unknown { }
-
-public unsafe partial class StdVector<T> :
-    IDisposable,
-    ICppInstance<StdVector<T>>,
-    IMoveableCppInstance<StdVector<T>>,
-    ICopyableCppInstance<StdVector<T>>,
-    ITypeReferenceProvider
-    where T : unmanaged
-{
 
 #if LINUX
     internal static partial Regex StdVectorRegex() => throw new NotImplementedException();
@@ -39,8 +27,18 @@ public unsafe partial class StdVector<T> :
     public static Regex Regex => StdVectorRegex();
 
     public static Type? Matched(Match match) =>
-        typeof(StdVector<Unknown>.StdVectorFiller);
+        typeof(CxxVectorDesc);
+}
 
+public struct Unknown { }
+
+public unsafe partial class StdVector<T> :
+    IDisposable,
+    ICppInstance<StdVector<T>>,
+    IMoveableCppInstance<StdVector<T>>,
+    ICopyableCppInstance<StdVector<T>>
+    where T : unmanaged
+{
     public struct StdVectorFiller : INativeTypeFiller<StdVectorFiller, StdVector<T>>
     {
         public CxxVectorDesc cxxVector;
