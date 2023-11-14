@@ -6,6 +6,9 @@ namespace Hosihikari.NativeInterop.Hook.ObjectOriented;
 public abstract class HookBase<TDelegate> : IHook
     where TDelegate : Delegate
 {
+    protected HookBase(Delegate func)
+        : this(SymbolHelper.QuerySymbol(func)) { }
+
     protected HookBase(string symbol)
         : this(SymbolHelper.Dlsym(symbol)) { }
 

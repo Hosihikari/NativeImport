@@ -1,4 +1,7 @@
 ﻿using Hosihikari.FastElfQuery;
+using Hosihikari.NativeInterop.Unmanaged.Attributes;
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace Hosihikari.NativeInterop;
@@ -86,4 +89,57 @@ public static partial class SymbolHelper
     /// <returns>Pointer of function</returns>
     public static unsafe void* DlsymPointer(string symbolName) =>
         Dlsym(symbolName).ToPointer();
+
+
+    public static bool TryQuerySymbol([NotNullWhen(true)] out string? symbol, PropertyInfo fptrProperty)
+    {
+        symbol = null;
+        var attr = fptrProperty.GetCustomAttribute<SymbolAttribute>();
+        if (attr is null) return false;
+
+        symbol = attr.Symbol;
+        return true;
+    }
+
+    public static string QuerySymbol(PropertyInfo fptrProperty)
+    {
+        if (TryQuerySymbol(out var symbol, fptrProperty))
+        {
+            return symbol;
+        }
+
+        throw new InvalidOperationException();
+    }
+
+    public static bool TryQuerySymbol([NotNullWhen(true)] out string? symbol, MethodInfo method)
+    {
+        symbol = null;
+        var attr = method.GetCustomAttribute<SymbolAttribute>();
+        if (attr is null) return false;
+
+        symbol = attr.Symbol;
+        return true;
+    }
+
+    public static string QuerySymbol(MethodInfo method)
+    {
+        if (TryQuerySymbol(out var symbol, method))
+        {
+            return symbol;
+        }
+
+        throw new InvalidOperationException();
+    }
+
+    public static bool TryQuerySymbol([NotNullWhen(true)] out string? symbol, Delegate method)
+        => TryQuerySymbol(out symbol, method.Method);
+
+    public static string QuerySymbol(Delegate method)
+    {
+        if (TryQuerySymbol(out var symbol, method))
+        {
+            return symbol;
+        }
+        throw new InvalidOperationException();
+    }
 }

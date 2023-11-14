@@ -9,5 +9,11 @@ public class EasyHook<TDelegate> : HookBase<TDelegate>
         HookedFunc = func;
     }
 
+    public EasyHook(TDelegate oldFunc, TDelegate newFunc)
+        : base(SymbolHelper.QuerySymbol(oldFunc))
+    {
+        HookedFunc = newFunc;
+    }
+
     public override TDelegate HookedFunc { get; }
 }
