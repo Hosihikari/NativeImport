@@ -9,13 +9,13 @@ namespace Hosihikari.NativeInterop;
 public static partial class SymbolHelper
 {
 
-#if LINUX
+#if WINDOWS
+    private static ElfSymbolQueryTable SymbolTable => throw new NotSupportedException();
+#else
     static SymbolHelper() =>
         SymbolTable = new ElfSymbolQueryTable("bedrock_server_symbols.debug");
 
     private static ElfSymbolQueryTable SymbolTable { get; }
-#else
-    private static ElfSymbolQueryTable SymbolTable => throw new NotSupportedException();
 #endif
     /// <summary>
     /// Try to get address of function from main module by symbol
@@ -25,16 +25,7 @@ public static partial class SymbolHelper
     /// <returns>Is symbol available</returns>
     public static bool TryDlsym(string symbolName, out nint address)
     {
-#if LINUX
-        if (SymbolTable.TryQuery(symbolName, out int offset))
-        {
-            address = HandleHelper.MainHandleHandle + offset;
-            return true;
-        }
-        address = default;
-        return false;
-    
-#else
+#if WINDOWS
         var ptr = Dlsym(symbolName);
         if (ptr is not 0)
         {
@@ -42,6 +33,14 @@ public static partial class SymbolHelper
             return true;
         }
 
+        address = default;
+        return false;
+#else
+        if (SymbolTable.TryQuery(symbolName, out int offset))
+        {
+            address = HandleHelper.MainHandleHandle + offset;
+            return true;
+        }
         address = default;
         return false;
 #endif
@@ -65,13 +64,13 @@ public static partial class SymbolHelper
     /// </summary>
     /// <param name="symbolName">Symbol of function</param>
     /// <returns>IntPtr of function</returns>
-#if LINUX
-    public static nint Dlsym(string symbolName) =>
-        SymbolTable.Query(symbolName) + HandleHelper.MainHandleHandle;
-#else
+#if WINDOWS
     internal const string LibName = "Hosihikari.Preload";
     [LibraryImport(LibName, EntryPoint = "dlsym")]
     internal static unsafe partial nint Dlsym([MarshalAs(UnmanagedType.LPWStr)] string symbolName);
+#else
+    public static nint Dlsym(string symbolName) =>
+        SymbolTable.Query(symbolName) + HandleHelper.MainHandleHandle;
 #endif
 
     /// <summary>

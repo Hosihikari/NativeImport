@@ -11,16 +11,16 @@ public enum HookResult : int
 internal static partial class LibHook
 {
 
-#if LINUX
-    private const string LibName = "libdobby";
-#else
+#if WINDOWS
     private const string LibName = "Hosihikari.Preload";
+#else
+    private const string LibName = "dobby";
 #endif
 
-#if LINUX
-    [LibraryImport(LibName, EntryPoint = "DobbyHook")]
-#else
+#if WINDOWS
     [LibraryImport(LibName, EntryPoint = "hook_function")]
+#else
+    [LibraryImport(LibName, EntryPoint = "DobbyHook")]
 #endif
     internal static unsafe partial HookResult Hook(
         void* address,
@@ -29,10 +29,10 @@ internal static partial class LibHook
     );
 
 
-#if LINUX
-    [LibraryImport(LibName, EntryPoint = "DobbyDestroy")]
-#else
+#if WINDOWS
     [LibraryImport(LibName, EntryPoint = "unhook_function")]
+#else
+    [LibraryImport(LibName, EntryPoint = "DobbyDestroy")]
 #endif
     internal static unsafe partial HookResult Unhook(void* address);
 }

@@ -17,11 +17,11 @@ public unsafe partial struct CxxVectorDesc : ITypeReferenceProvider
     //compressed_pair<pointer,allocator<T>>
     public void* end_cap;
 
-#if LINUX
-    internal static partial Regex StdVectorRegex() => throw new NotImplementedException();
-#else
+#if WINDOWS
     [GeneratedRegex("^std::vector<(?<class_type>.*), class std::allocator<(\\k<class_type>)>>")]
     internal static partial Regex StdVectorRegex();
+#else
+    internal static partial Regex StdVectorRegex() => throw new NotImplementedException();
 #endif
 
     public static Regex Regex => StdVectorRegex();

@@ -1,4 +1,4 @@
-﻿#if LINUX
+﻿#if !WINDOWS
 
 using System.Buffers;
 using System.Runtime.InteropServices;

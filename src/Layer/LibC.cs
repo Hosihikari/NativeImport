@@ -1,11 +1,11 @@
-﻿#if LINUX
+﻿#if !WINDOWS
 using System.Runtime.InteropServices;
 
 namespace Hosihikari.NativeInterop.Layer;
 
 public static partial class LibC
 {
-    private const string LibName = "libc";
+    private const string LibName = "c";
 
     [LibraryImport(LibName, StringMarshalling = StringMarshalling.Utf16)]
     public static partial nint Dlsym(nint handle, string symbol);

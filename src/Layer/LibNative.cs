@@ -5,10 +5,10 @@ namespace Hosihikari.NativeInterop.Layer;
 
 internal static partial class LibNative
 {
-#if LINUX
-    internal const string LibName = "liblayer";
-#else
+#if WINDOWS
     internal const string LibName = "Hosihikari.Preload";
+#else
+    internal const string LibName = "layer";
 #endif
 
     #region memory
