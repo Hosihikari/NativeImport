@@ -21,7 +21,7 @@ public unsafe partial struct CxxVectorDesc : ITypeReferenceProvider
     [GeneratedRegex("^std::vector<(?<class_type>.*), class std::allocator<(\\k<class_type>)>>")]
     internal static partial Regex StdVectorRegex();
 #else
-    internal static partial Regex StdVectorRegex() => throw new NotImplementedException();
+    internal static Regex StdVectorRegex() => throw new NotImplementedException();
 #endif
 
     public static Regex Regex => StdVectorRegex();
