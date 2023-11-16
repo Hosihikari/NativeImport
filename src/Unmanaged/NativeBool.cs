@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 namespace Hosihikari.NativeInterop.Unmanaged;
 
 [StructLayout(LayoutKind.Sequential)]
-internal readonly ref struct NativeBool
+public readonly struct NativeBool
 {
     private readonly byte value;
 

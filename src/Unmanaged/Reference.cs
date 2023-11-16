@@ -15,4 +15,6 @@ public readonly unsafe struct Reference<T> where T : class, ICppInstance<T>
     public static explicit operator Reference<T>(nint ptr) => new(ptr);
 
     public static implicit operator nint(Reference<T> ptr) => ptr._ptr;
+
+    public Reference<U> As<U>() where U : class, ICppInstance<U> => (Reference<U>)_ptr;
 }

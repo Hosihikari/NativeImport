@@ -2,9 +2,9 @@
 
 namespace Hosihikari.NativeInterop.Unmanaged;
 
-public readonly unsafe struct Pointer<T> where T : class, ICppInstance<T>
+public unsafe struct Pointer<T> where T : class, ICppInstance<T>
 {
-    private readonly nint _ptr;
+    private nint _ptr;
 
     public readonly T Target => T.ConstructInstance(_ptr, false, false);
 
@@ -17,6 +17,10 @@ public readonly unsafe struct Pointer<T> where T : class, ICppInstance<T>
     public static explicit operator Pointer<T>(nint ptr) => new(ptr);
 
     public static implicit operator nint(Pointer<T> ptr) => ptr._ptr;
+
+    public readonly Pointer<U> As<U>() where U : class, ICppInstance<U> => (Pointer<U>)_ptr;
+
+    public void AddOffset(int offset) => _ptr += offset;
 
     public readonly void Delete()
     {
