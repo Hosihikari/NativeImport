@@ -8,5 +8,5 @@ public readonly unsafe ref struct RValueReference<T> where T : class, ICppInstan
 
     private RValueReference(nint ptr) => _ptr = ptr;
 
-    public static implicit operator RValueReference<T>(in MoveHandle<T> handle) => new(handle.Target.Pointer);
+    public static implicit operator RValueReference<T>(in MoveHandle<T> handle) => new(handle.Target->Pointer);
 }

@@ -2,6 +2,12 @@
 
 namespace Hosihikari.NativeInterop.Unmanaged;
 
+[StructLayout(LayoutKind.Explicit, Size = 8)]
+public unsafe struct UnknownResult
+{
+
+}
+
 public unsafe struct Result<T> where T : class, ICppInstance<T>
 {
     private nint _ptr;
@@ -11,7 +17,7 @@ public unsafe struct Result<T> where T : class, ICppInstance<T>
         if (_ptr == IntPtr.Zero)
             throw new InvalidOperationException("Null pointer.");
 
-        var ret =T.ConstructInstance(_ptr, true, true);
+        var ret = T.ConstructInstance(_ptr, true, true);
         _ptr = IntPtr.Zero;
         return ret;
     }
@@ -24,5 +30,7 @@ public unsafe struct Result<T> where T : class, ICppInstance<T>
         }
         T.DestructInstance(_ptr);
     }
+
+    public readonly nint Value => _ptr;
 }
 

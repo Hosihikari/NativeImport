@@ -2,7 +2,7 @@
 
 public unsafe static class Memory
 {
-    public static T* DAccessAsPointer<T>(void* address, int offset)
+    public static T* DAccess<T>(void* address, int offset)
         where T : unmanaged
         => (T*)((nint)address + offset);
 

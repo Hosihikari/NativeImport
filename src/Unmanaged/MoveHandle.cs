@@ -1,13 +1,15 @@
 ﻿namespace Hosihikari.NativeInterop.Unmanaged;
 
-public readonly ref struct MoveHandle<T> where T : class, ICppInstance<T>
+#pragma warning disable CS8500
+public unsafe readonly ref struct MoveHandle<T>
 {
-    private readonly T _instance;
+    private readonly T* _instance;
 
-    internal MoveHandle(T val)
+    internal MoveHandle(in T val)
     {
-        _instance = val;
+        fixed (T* ptr = &val)
+            _instance = ptr;
     }
 
-    public T Target => _instance;
+    public T* Target => _instance;
 }

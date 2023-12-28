@@ -7,7 +7,7 @@ namespace Hosihikari.NativeInterop.Unmanaged;
 
 public static class CppTypeSystem
 {
-    public static unsafe void* GetVTable(void* ptr) => (void*)Unsafe.Read<long>(ptr);
+    public static unsafe void* GetVTable(void* ptr) => *(void**)ptr;
 
     public static unsafe TVtable* GetVTable<TVtable>(void* ptr)
         where TVtable : unmanaged, ICppVtable
@@ -49,6 +49,13 @@ public static class CppTypeSystem
         }
         return T.ConstructInstance(@this.Pointer, false, true);
     }
+
+    public unsafe static void* GetVurtualFunctionPointerByIndex(nint ptr, int index)
+    {
+        var vtable = *(long**)ptr;
+        var fptr = *(vtable + index);
+        return (void*)fptr;
+    }
 }
 
 [AttributeUsage(AttributeTargets.Method)]
@@ -83,7 +90,7 @@ public unsafe interface INativeVirtualMethodOverrideProvider<T, TVtable>
             {
                 if (ptr is not null)
                 {
-                    HeapAlloc<TVtable>.Delete(ptr);
+                    HeapAlloc.Delete(ptr);
                 }
             }
         }

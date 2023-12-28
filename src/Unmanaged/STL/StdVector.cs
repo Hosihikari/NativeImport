@@ -8,7 +8,7 @@ using size_t = System.UInt64;
 namespace Hosihikari.NativeInterop.Unmanaged.STL;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe partial struct CxxVectorDesc : ITypeReferenceProvider
+public unsafe partial struct CxxVector : ITypeReferenceProvider
 {
     public void* begin;
 
@@ -18,7 +18,7 @@ public unsafe partial struct CxxVectorDesc : ITypeReferenceProvider
     public void* end_cap;
 
 #if WINDOWS
-    [GeneratedRegex("^std::vector<(?<class_type>.*), class std::allocator<(\\k<class_type>)>>")]
+    [GeneratedRegex("^class std::vector<(?<class_type>.*), class std::allocator<(\\k<class_type>)>>")]
     internal static partial Regex StdVectorRegex();
 #else
     internal static Regex StdVectorRegex() => throw new NotImplementedException();
@@ -27,7 +27,7 @@ public unsafe partial struct CxxVectorDesc : ITypeReferenceProvider
     public static Regex Regex => StdVectorRegex();
 
     public static Type? Matched(Match match) =>
-        typeof(CxxVectorDesc);
+        typeof(CxxVector);
 }
 
 public struct Unknown { }
@@ -41,7 +41,7 @@ public unsafe partial class StdVector<T> :
 {
     public struct StdVectorFiller : INativeTypeFiller<StdVectorFiller, StdVector<T>>
     {
-        public CxxVectorDesc cxxVector;
+        public CxxVector cxxVector;
 
         static StdVectorFiller()
         {
@@ -73,13 +73,13 @@ public unsafe partial class StdVector<T> :
 
     public bool IsTempStackValue { get; set; }
 
-    public nint Pointer { get => new(_pointer); set => _pointer = (CxxVectorDesc*)value.ToPointer(); }
+    public nint Pointer { get => new(_pointer); set => _pointer = (CxxVector*)value.ToPointer(); }
 
     public static StdVector<T> ConstructInstance(nint ptr, bool owns, bool isTempStackValue) => new(ptr, owns, isTempStackValue);
 
     public static void DestructInstance(nint ptr)
     {
-        CxxVectorDesc* p = (CxxVectorDesc*)ptr.ToPointer();
+        CxxVector* p = (CxxVector*)ptr.ToPointer();
 
         if (IsFiller)
         {
@@ -140,27 +140,27 @@ public unsafe partial class StdVector<T> :
         GC.SuppressFinalize(this);
     }
 
-    private CxxVectorDesc* _pointer;
+    private CxxVector* _pointer;
     private bool _isOwner;
     private bool disposedValue;
 
 
     public StdVector(nint ptr, bool isOwner = false, bool isTempStackValue = true)
     {
-        _pointer = (CxxVectorDesc*)ptr.ToPointer();
+        _pointer = (CxxVector*)ptr.ToPointer();
         _isOwner = isOwner;
     }
 
     public StdVector(StdVector<T> vec)
     {
-        CxxVectorDesc* ptr = vec._pointer;
+        CxxVector* ptr = vec._pointer;
         if (ptr is null)
         {
             throw new NullReferenceException(nameof(vec._pointer));
         }
 
         ulong size = vec.Size();
-        _pointer = HeapAlloc<CxxVectorDesc>.New(default);
+        _pointer = HeapAlloc<CxxVector>.New(default);
         First = HeapAlloc<T>.NewArray(size);
         Unsafe.CopyBlock(First, vec.First, (uint)size * (uint)sizeof(T));
         Last = First + size;
@@ -200,23 +200,23 @@ public unsafe partial class StdVector<T> :
 
     public StdVector(nint pointer)
     {
-        _pointer = (CxxVectorDesc*)pointer.ToPointer();
+        _pointer = (CxxVector*)pointer.ToPointer();
         _isOwner = false;
         IsTempStackValue = true;
     }
 
     public StdVector(void* pointer)
     {
-        _pointer = (CxxVectorDesc*)pointer;
+        _pointer = (CxxVector*)pointer;
         _isOwner = false;
         IsTempStackValue = true;
     }
 
     public StdVector()
     {
-        _pointer = (CxxVectorDesc*)Marshal.AllocHGlobal(sizeof(CxxVectorDesc)).ToPointer();
+        _pointer = (CxxVector*)Marshal.AllocHGlobal(sizeof(CxxVector)).ToPointer();
         _isOwner = true;
-        Unsafe.InitBlock(_pointer, 0, (uint)sizeof(CxxVectorDesc));
+        Unsafe.InitBlock(_pointer, 0, (uint)sizeof(CxxVector));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
