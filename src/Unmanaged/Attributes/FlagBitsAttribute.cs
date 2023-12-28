@@ -1,8 +1,7 @@
 ﻿namespace Hosihikari.NativeInterop.Unmanaged.Attributes;
 
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Field)]
-public class FlagBitsAttribute : Attribute
+public class FlagBitsAttribute(int value) : Attribute
 {
-    public int FlagBits { get; private set; }
-    public FlagBitsAttribute(int value) => FlagBits = value;
+    public int FlagBits { get; private set; } = value;
 }

@@ -1,19 +1,12 @@
 ﻿namespace Hosihikari.NativeInterop.Hook.ObjectOriented;
 
-public class EasyHook<TDelegate> : HookBase<TDelegate>
+public class EasyHook<TDelegate>(string rva, TDelegate func) : HookBase<TDelegate>(rva)
     where TDelegate : Delegate
 {
-    public EasyHook(string rva, TDelegate func)
-        : base(rva)
-    {
-        HookedFunc = func;
-    }
-
     public EasyHook(TDelegate oldFunc, TDelegate newFunc)
-        : base(SymbolHelper.QuerySymbol(oldFunc))
+        : this(SymbolHelper.QuerySymbol(oldFunc), newFunc)
     {
-        HookedFunc = newFunc;
     }
 
-    public override TDelegate HookedFunc { get; }
+    public override TDelegate HookedFunc { get; } = func;
 }

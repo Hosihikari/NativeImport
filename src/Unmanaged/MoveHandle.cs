@@ -1,7 +1,7 @@
 ﻿namespace Hosihikari.NativeInterop.Unmanaged;
 
 #pragma warning disable CS8500
-public unsafe readonly ref struct MoveHandle<T>
+public readonly unsafe ref struct MoveHandle<T>
 {
     private readonly T* _instance;
 

@@ -4,7 +4,7 @@ public readonly unsafe ref struct RValueReference<T> where T : class, ICppInstan
 {
     private readonly nint _ptr;
 
-    public readonly T Target => T.ConstructInstance(_ptr, false, false);
+    public T Target => T.ConstructInstance(_ptr, false, false);
 
     private RValueReference(nint ptr) => _ptr = ptr;
 

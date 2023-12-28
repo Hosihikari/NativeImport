@@ -2,11 +2,11 @@
 
 namespace Hosihikari.NativeInterop.Unmanaged;
 
-public interface INativeTypeFiller<TFiller, TManagedType>
+public interface INativeTypeFiller<TFiller, out TManagedType>
     where TFiller : unmanaged, INativeTypeFiller<TFiller, TManagedType>
     where TManagedType : class, ICppInstance<TManagedType>
 {
-    public static unsafe abstract void Destruct(TFiller* @this);
+    public static abstract unsafe void Destruct(TFiller* @this);
 
     public static abstract implicit operator TManagedType(in TFiller filler);
 }
@@ -17,18 +17,15 @@ internal static class NativeTypeFillerHelper
         where TFiller : unmanaged
     {
         Type type = typeof(TFiller);
-        foreach (Type t in type.GetInterfaces())
+        if (type.GetInterfaces().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(INativeTypeFiller<,>)))
         {
-            if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(INativeTypeFiller<,>))
-            {
-                result = (delegate* managed<TFiller*, void>)
-                    type
-                    .GetMethod("Destruct", BindingFlags.Public | BindingFlags.Static, new[] { typeof(TFiller*) })!
+            result = (delegate* managed<TFiller*, void>)
+                type
+                    .GetMethod("Destruct", BindingFlags.Public | BindingFlags.Static, [typeof(TFiller*)])!
                     .MethodHandle
                     .GetFunctionPointer()
                     .ToPointer();
-                return true;
-            }
+            return true;
         }
         result = null;
         return false;

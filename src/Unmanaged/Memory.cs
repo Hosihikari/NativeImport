@@ -1,6 +1,6 @@
 ﻿namespace Hosihikari.NativeInterop.Unmanaged;
 
-public unsafe static class Memory
+public static unsafe class Memory
 {
     public static T* DAccess<T>(void* address, int offset)
         where T : unmanaged

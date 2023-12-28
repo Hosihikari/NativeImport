@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using Hosihikari.NativeInterop.Generation;
 using Hosihikari.NativeInterop.Layer;
-using size_t = System.UInt64;
+using size_t = ulong;
 
 namespace Hosihikari.NativeInterop.Unmanaged.STL;
 
@@ -26,7 +26,7 @@ public unsafe partial struct CxxVector : ITypeReferenceProvider
 
     public static Regex Regex => StdVectorRegex();
 
-    public static Type? Matched(Match match) =>
+    public static Type Matched(Match match) =>
         typeof(CxxVector);
 }
 
@@ -58,7 +58,7 @@ public unsafe partial class StdVector<T> :
         {
             fixed (void* ptr = &filler)
             {
-                return new StdVector<T>(ptr);
+                return new(ptr);
             }
         }
     }
@@ -67,9 +67,9 @@ public unsafe partial class StdVector<T> :
     private static readonly delegate* managed<T*, void> DtorFptr;
     static StdVector() => IsFiller = NativeTypeFillerHelper.TryGetDestructorFunctionPointer(out DtorFptr);
 
-    public static ulong ClassSize => 24ul;
+    public static size_t ClassSize => 24ul;
 
-    public bool IsOwner { get => _isOwner; set => _isOwner = value; }
+    public bool IsOwner { get; set; }
 
     public bool IsTempStackValue { get; set; }
 
@@ -84,7 +84,7 @@ public unsafe partial class StdVector<T> :
         if (IsFiller)
         {
             using StdVector<T> vector = new(ptr);
-            ulong size = vector.Size();
+            size_t size = vector.Size();
             for (size_t i = 0; i < size; ++i)
             {
                 fixed (T* currentPtr = &vector[i])
@@ -123,7 +123,7 @@ public unsafe partial class StdVector<T> :
             return;
         }
 
-        if (_isOwner)
+        if (IsOwner)
         {
             Destruct();
             LibNative.operator_delete(this);
@@ -141,14 +141,13 @@ public unsafe partial class StdVector<T> :
     }
 
     private CxxVector* _pointer;
-    private bool _isOwner;
     private bool disposedValue;
 
 
     public StdVector(nint ptr, bool isOwner = false, bool isTempStackValue = true)
     {
         _pointer = (CxxVector*)ptr.ToPointer();
-        _isOwner = isOwner;
+        IsOwner = isOwner;
     }
 
     public StdVector(StdVector<T> vec)
@@ -159,14 +158,14 @@ public unsafe partial class StdVector<T> :
             throw new NullReferenceException(nameof(vec._pointer));
         }
 
-        ulong size = vec.Size();
+        size_t size = vec.Size();
         _pointer = HeapAlloc<CxxVector>.New(default);
         First = HeapAlloc<T>.NewArray(size);
         Unsafe.CopyBlock(First, vec.First, (uint)size * (uint)sizeof(T));
         Last = First + size;
         End = Last + vec.Capacity();
 
-        _isOwner = true;
+        IsOwner = true;
         IsTempStackValue = false;
     }
 
@@ -201,29 +200,29 @@ public unsafe partial class StdVector<T> :
     public StdVector(nint pointer)
     {
         _pointer = (CxxVector*)pointer.ToPointer();
-        _isOwner = false;
+        IsOwner = false;
         IsTempStackValue = true;
     }
 
     public StdVector(void* pointer)
     {
         _pointer = (CxxVector*)pointer;
-        _isOwner = false;
+        IsOwner = false;
         IsTempStackValue = true;
     }
 
     public StdVector()
     {
         _pointer = (CxxVector*)Marshal.AllocHGlobal(sizeof(CxxVector)).ToPointer();
-        _isOwner = true;
+        IsOwner = true;
         Unsafe.InitBlock(_pointer, 0, (uint)sizeof(CxxVector));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public size_t Size() => (ulong)((Last - First) / sizeof(T));
+    public size_t Size() => (size_t)((Last - First) / sizeof(T));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public size_t Capacity() => (ulong)((End - First) / sizeof(T));
+    public size_t Capacity() => (size_t)((End - First) / sizeof(T));
 
     public ref T this[size_t index]
     {
@@ -246,7 +245,7 @@ public unsafe partial class StdVector<T> :
             return max_size;
         }
 
-        ulong geometric = oldCapacity + (oldCapacity / 2);
+        size_t geometric = oldCapacity + (oldCapacity / 2);
 
         return geometric >= newSize ? geometric : newSize;
     }
@@ -260,8 +259,8 @@ public unsafe partial class StdVector<T> :
             ++Last;
             return ref Unsafe.AsRef<T>(last);
         }
-        ulong newCapacity = CalculateGrowth(Size() + 1);
-        ulong oldSize = Size();
+        size_t newCapacity = CalculateGrowth(Size() + 1);
+        size_t oldSize = Size();
         T* newVec = (T*)Marshal.AllocHGlobal((int)newCapacity * sizeof(T)).ToPointer();
         Unsafe.CopyBlock(newVec, First, (uint)(((int)oldSize) * sizeof(T)));
         Unsafe.Write(newVec + oldSize, val);

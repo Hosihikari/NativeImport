@@ -20,7 +20,7 @@ public static class Function
     )
     {
         HookResult result = LibHook.Hook(address, hook, out org);
-        instance = new HookInstance(address, org);
+        instance = new(address, org);
         return result;
     }
 

@@ -23,7 +23,7 @@ public abstract class HookBase<TDelegate> : IHook
 
     private HookBase()
     {
-        _originalFuncInstance = new Lazy<TDelegate>(() =>
+        _originalFuncInstance = new(() =>
         {
             unsafe
             {
@@ -32,7 +32,7 @@ public abstract class HookBase<TDelegate> : IHook
                     : Marshal.GetDelegateForFunctionPointer<TDelegate>(new(_orgIntPtr));
             }
         });
-        _hookedFuncInstance = new Lazy<TDelegate>(() =>
+        _hookedFuncInstance = new(() =>
         {
             TDelegate hookedFunc = HookedFunc;
             return HookedFunc is null ? throw new NullReferenceException("HookedFunc") : hookedFunc;
@@ -59,9 +59,9 @@ public abstract class HookBase<TDelegate> : IHook
     private unsafe void* _hookedFuncPointer;
 
     //alloc handle for delegate
-    private GCHandle? _handle = null;
+    private GCHandle? _handle;
 
-    private HookInstance? _instance = null;
+    private HookInstance? _instance;
 
     public void Install()
     {

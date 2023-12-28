@@ -3,34 +3,29 @@
 namespace Hosihikari.NativeInterop.Unmanaged;
 
 [StructLayout(LayoutKind.Explicit, Size = 8)]
-public unsafe struct UnknownResult
+public struct UnknownResult;
+
+public struct Result<T> where T : class, ICppInstance<T>
 {
-
-}
-
-public unsafe struct Result<T> where T : class, ICppInstance<T>
-{
-    private nint _ptr;
-
     public T GetInstance()
     {
-        if (_ptr == IntPtr.Zero)
+        if (Value == nint.Zero)
             throw new InvalidOperationException("Null pointer.");
 
-        var ret = T.ConstructInstance(_ptr, true, true);
-        _ptr = IntPtr.Zero;
+        T ret = T.ConstructInstance(Value, true, true);
+        Value = nint.Zero;
         return ret;
     }
 
     public readonly void Drop()
     {
-        if (_ptr == nint.Zero)
+        if (Value == nint.Zero)
         {
             return;
         }
-        T.DestructInstance(_ptr);
+        T.DestructInstance(Value);
     }
 
-    public readonly nint Value => _ptr;
+    public nint Value { get; private set; }
 }
 

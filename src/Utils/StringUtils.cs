@@ -53,7 +53,7 @@ public static class StringUtils
         if (string.IsNullOrEmpty(s))
         {
             length = 0;
-            return new byte[] { 0 };
+            return [0];
         }
         Encoding utf8 = Encoding.UTF8;
         fixed (char* ptr = s)

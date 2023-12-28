@@ -1,6 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.Marshalling;
 using Hosihikari.NativeInterop.Generation;
 using Hosihikari.NativeInterop.Utils;
 
@@ -45,7 +44,7 @@ public unsafe struct StdString : IDisposable
     {
         fixed (byte* buf = storage.buffer)
         {
-            return new string(res > BufferSize ? (sbyte*)storage.ptr : (sbyte*)buf, 0, (int)size);
+            return new(res > BufferSize ? (sbyte*)storage.ptr : (sbyte*)buf, 0, (int)size);
         }
     }
 
@@ -70,40 +69,37 @@ public unsafe struct StdString : IDisposable
     {
         ulong num = res;
 
-        ulong num2 = int.MaxValue / sizeof(byte);
+        const ulong num2 = int.MaxValue / sizeof(byte);
         ulong num3 = num >> 1;
         if (num > num2 - num3)
         {
             return num2;
         }
         ulong num4 = num3 + num;
-        return (num4 < newSize) ? newSize : num4;
+        return num4 < newSize ? newSize : num4;
     }
 
     private void EmplaceReallocate(ulong index, byte* ptr, ulong size)
     {
         fixed (byte* buf = storage.buffer)
         {
-            var oldSize = size;
-            var oldCap = res;
-            var newSize = oldSize + size;
-            var newCap = CalculateGrowth(newSize);
+            ulong oldSize = size;
+            ulong oldCap = res;
+            ulong newSize = oldSize + size;
+            ulong newCap = CalculateGrowth(newSize);
 
-            byte* newStr = null;
-            byte* oldStr = null;
             byte* temp = stackalloc byte[BufferSize];
 
-            newStr = newCap > BufferSize ? (byte*)HeapAlloc.New(newCap) : temp;
-            oldStr = oldCap > BufferSize ? storage.ptr : buf;
+            byte* newStr = newCap > BufferSize ? (byte*)HeapAlloc.New(newCap) : temp;
+            byte* oldStr = oldCap > BufferSize ? storage.ptr : buf;
 
             byte* constructed = newStr;
 
-            var indexLength = index;
-            Unsafe.CopyBlock(constructed, oldStr, (uint)indexLength * sizeof(byte));
-            constructed += indexLength;
+            Unsafe.CopyBlock(constructed, oldStr, (uint)index * sizeof(byte));
+            constructed += index;
             Unsafe.CopyBlock(constructed, ptr, (uint)size * sizeof(byte));
             constructed += size;
-            Unsafe.CopyBlock(constructed, oldStr + indexLength, (uint)(oldSize - indexLength) * sizeof(byte));
+            Unsafe.CopyBlock(constructed, oldStr + index, (uint)(oldSize - index) * sizeof(byte));
 
             if (newCap > BufferSize)
             {
@@ -130,14 +126,13 @@ public unsafe struct StdString : IDisposable
         fixed (byte* buf = storage.buffer)
         {
             byte* str = null;
-            var indexLength = index;
             str = res > BufferSize ? storage.ptr : buf;
             byte* temp = stackalloc byte[BufferSize];
             byte* buffer = size > BufferSize ? (byte*)HeapAlloc.New(size) : temp;
 
-            Unsafe.CopyBlock(buffer, str + indexLength, (uint)(size - indexLength) * sizeof(byte));
-            Unsafe.CopyBlock(str + indexLength + size, buffer, (uint)size * sizeof(byte));
-            Unsafe.CopyBlock(str + indexLength, ptr, (uint)size * sizeof(byte));
+            Unsafe.CopyBlock(buffer, str + index, (uint)(size - index) * sizeof(byte));
+            Unsafe.CopyBlock(str + index + size, buffer, (uint)size * sizeof(byte));
+            Unsafe.CopyBlock(str + index, ptr, (uint)size * sizeof(byte));
 
             if (size > BufferSize) HeapAlloc.Delete(buffer);
 
@@ -154,7 +149,7 @@ public unsafe struct StdString : IDisposable
 
     public StdString(string str)
     {
-        var bytes = StringUtils.StringToManagedUtf8(str);
+        byte[] bytes = StringUtils.StringToManagedUtf8(str);
         res = size = (ulong)bytes.Length;
 
         fixed (byte* ptr = bytes)

@@ -18,7 +18,7 @@ public unsafe struct StdErrorCondition
 public unsafe struct StdErrorCategory
 {
     [StructLayout(LayoutKind.Sequential)]
-    public readonly unsafe struct VTable : ICppVtable
+    public readonly struct VTable : ICppVtable
     {
         // 0
         public readonly delegate* unmanaged<StdErrorCategory*, void> destructor;

@@ -23,7 +23,7 @@ public static class CppTypeSystem
         throw new InvalidOperationException("\'VirtualCppClassAttribute\' instance is null.");
     }
 
-    public static unsafe ValuePointer<TVtable> GetVTable<T, TVtable>(Pointer<T> ptr, bool cheekAttribute = true)
+    public static ValuePointer<TVtable> GetVTable<T, TVtable>(Pointer<T> ptr, bool cheekAttribute = true)
         where T : class, ICppInstance<T>
         where TVtable : unmanaged, ICppVtable
         => GetVTable<T, TVtable>(ptr, cheekAttribute);
@@ -36,37 +36,33 @@ public static class CppTypeSystem
     public static T As<T>(this ICppInstanceNonGeneric @this, bool releaseSrc = false)
         where T : class, IDisposable, ICppInstance<T>
     {
-        if (releaseSrc)
+        if (!releaseSrc)
         {
-            T temp = T.ConstructInstance(@this.Pointer, @this.IsOwner, @this.IsTempStackValue);
-            @this.Pointer = 0;
-            @this.IsOwner = false;
-            @this.IsTempStackValue = false;
-
-            @this.Dispose();
-
-            return temp;
+            return T.ConstructInstance(@this.Pointer, false, true);
         }
-        return T.ConstructInstance(@this.Pointer, false, true);
+
+        T temp = T.ConstructInstance(@this.Pointer, @this.IsOwner, @this.IsTempStackValue);
+        @this.Pointer = 0;
+        @this.IsOwner = false;
+        @this.IsTempStackValue = false;
+
+        @this.Dispose();
+
+        return temp;
     }
 
-    public unsafe static void* GetVurtualFunctionPointerByIndex(nint ptr, int index)
+    public static unsafe void* GetVurtualFunctionPointerByIndex(nint ptr, int index)
     {
-        var vtable = *(long**)ptr;
-        var fptr = *(vtable + index);
+        long* vtable = *(long**)ptr;
+        long fptr = *(vtable + index);
         return (void*)fptr;
     }
 }
 
 [AttributeUsage(AttributeTargets.Method)]
-public class OverrideAttribute : Attribute
+public class OverrideAttribute(int virtualMethodIndex) : Attribute
 {
-    public int VirtualMethodIndex { get; private set; }
-
-    public OverrideAttribute(int virtualMethodIndex)
-    {
-        VirtualMethodIndex = virtualMethodIndex;
-    }
+    public int VirtualMethodIndex { get; private set; } = virtualMethodIndex;
 }
 
 public unsafe interface INativeVirtualMethodOverrideProvider<T, TVtable>
@@ -81,10 +77,6 @@ public unsafe interface INativeVirtualMethodOverrideProvider<T, TVtable>
             try
             {
                 ptr = HeapAlloc<TVtable>.New(default);
-            }
-            catch
-            {
-                throw;
             }
             finally
             {
@@ -116,11 +108,11 @@ public unsafe interface INativeVirtualMethodOverrideProvider<T, TVtable>
         isVirtualCppClass = typeof(T).GetCustomAttribute<VirtualCppClassAttribute>() is not null;
         if (isVirtualCppClass) return;
 
-        List<(int, nint)> list = new();
+        List<(int, nint)> list = [];
 
-        foreach (var method in typeof(T).GetMethods(BindingFlags.Public | BindingFlags.NonPublic))
+        foreach (MethodInfo method in typeof(T).GetMethods(BindingFlags.Public | BindingFlags.NonPublic))
         {
-            var overrideAttr = method.GetCustomAttribute<OverrideAttribute>();
+            OverrideAttribute? overrideAttr = method.GetCustomAttribute<OverrideAttribute>();
             if (overrideAttr is null) continue;
 
             _ = method.GetCustomAttribute<UnmanagedCallersOnlyAttribute>() ?? throw new InvalidProgramException();
@@ -134,12 +126,12 @@ public unsafe interface INativeVirtualMethodOverrideProvider<T, TVtable>
     {
         if (isVirtualCppClass is false || virtFptrs is null) return null;
 
-        var handle = new VTableHandle();
+        VTableHandle handle = new();
         Unsafe.CopyBlock(handle.VTable, CppTypeSystem.GetVTable((void*)ins.Pointer), (uint)sizeof(TVtable));
 
-        foreach (var (index, fptr) in virtFptrs)
+        foreach ((int index, nint fptr) in virtFptrs)
         {
-            *(void**)(((long)handle.VTable) + index * sizeof(void*)) = (void*)fptr;
+            *(void**)((long)handle.VTable + index * sizeof(void*)) = (void*)fptr;
         }
 
         *(void**)(void*)ins.Pointer = handle.VTable;

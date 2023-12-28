@@ -26,7 +26,7 @@ public static partial class SymbolHelper
     public static bool TryDlsym(string symbolName, out nint address)
     {
 #if WINDOWS
-        var ptr = Dlsym(symbolName);
+        nint ptr = Dlsym(symbolName);
         if (ptr is not 0)
         {
             address = ptr;
@@ -93,7 +93,7 @@ public static partial class SymbolHelper
     public static bool TryQuerySymbol([NotNullWhen(true)] out string? symbol, PropertyInfo fptrProperty)
     {
         symbol = null;
-        var attr = fptrProperty.GetCustomAttribute<SymbolAttribute>();
+        SymbolAttribute? attr = fptrProperty.GetCustomAttribute<SymbolAttribute>();
         if (attr is null) return false;
 
         symbol = attr.Symbol;
@@ -102,7 +102,7 @@ public static partial class SymbolHelper
 
     public static string QuerySymbol(PropertyInfo fptrProperty)
     {
-        if (TryQuerySymbol(out var symbol, fptrProperty))
+        if (TryQuerySymbol(out string? symbol, fptrProperty))
         {
             return symbol;
         }
@@ -113,7 +113,7 @@ public static partial class SymbolHelper
     public static bool TryQuerySymbol([NotNullWhen(true)] out string? symbol, MethodInfo method)
     {
         symbol = null;
-        var attr = method.GetCustomAttribute<SymbolAttribute>();
+        SymbolAttribute? attr = method.GetCustomAttribute<SymbolAttribute>();
         if (attr is null) return false;
 
         symbol = attr.Symbol;
@@ -122,7 +122,7 @@ public static partial class SymbolHelper
 
     public static string QuerySymbol(MethodInfo method)
     {
-        if (TryQuerySymbol(out var symbol, method))
+        if (TryQuerySymbol(out string? symbol, method))
         {
             return symbol;
         }
@@ -135,7 +135,7 @@ public static partial class SymbolHelper
 
     public static string QuerySymbol(Delegate method)
     {
-        if (TryQuerySymbol(out var symbol, method))
+        if (TryQuerySymbol(out string? symbol, method))
         {
             return symbol;
         }

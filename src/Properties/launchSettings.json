@@ -1,9 +1,0 @@
-{
-  "profiles": {
-    "配置文件 1": {
-      "commandName": "Executable",
-      "executablePath": "C:\\Users\\minec\\Desktop\\bds\\bedrock_server_mod.exe",
-      "workingDirectory": "C:\\Users\\minec\\Desktop\\bds"
-    }
-  }
-}

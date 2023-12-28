@@ -1,9 +1,7 @@
 ﻿namespace Hosihikari.NativeInterop.Unmanaged.Attributes;
 
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Field)]
-public class RVAAttribute : Attribute
+public class RVAAttribute(ulong rva) : Attribute
 {
-    public ulong RVA { get; private set; }
-
-    public RVAAttribute(ulong rva) => RVA = rva;
+    public ulong RVA { get; private set; } = rva;
 }

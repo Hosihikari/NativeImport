@@ -45,5 +45,5 @@ public interface ICppInstance<TSelf> : ICppInstanceNonGeneric
     /// noexcept
     /// </summary>
     /// <param name="ins"></param>
-    public static unsafe abstract implicit operator void*(TSelf ins);
+    public static abstract unsafe implicit operator void*(TSelf ins);
 }
