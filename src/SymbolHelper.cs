@@ -2,23 +2,31 @@
 using Hosihikari.NativeInterop.Unmanaged.Attributes;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+#if WINDOWS
 using System.Runtime.InteropServices;
+#endif
 
 namespace Hosihikari.NativeInterop;
 
-public static partial class SymbolHelper
-{
-
+public static
 #if WINDOWS
-    private static ElfSymbolQueryTable SymbolTable => throw new NotSupportedException();
-#else
-    static SymbolHelper() =>
-        SymbolTable = new ElfSymbolQueryTable("bedrock_server_symbols.debug");
-
-    private static ElfSymbolQueryTable SymbolTable { get; }
+    partial
 #endif
+    class SymbolHelper
+{
+    static SymbolHelper()
+    {
+#if WINDOWS
+        s_symbolTable = throw new NotSupportedException();
+#else
+        s_symbolTable = new("bedrock_server_symbols.debug");
+#endif
+    }
+
+    private static readonly ElfSymbolQueryTable s_symbolTable;
+
     /// <summary>
-    /// Try to get address of function from main module by symbol
+    ///     Try to get address of function from main module by symbol
     /// </summary>
     /// <param name="symbolName">Symbol of function</param>
     /// <param name="address">IntPtr of function</param>
@@ -27,7 +35,7 @@ public static partial class SymbolHelper
     {
 #if WINDOWS
         nint ptr = Dlsym(symbolName);
-        if (ptr is not 0)
+        if (ptr != nint.Zero)
         {
             address = ptr;
             return true;
@@ -36,18 +44,19 @@ public static partial class SymbolHelper
         address = default;
         return false;
 #else
-        if (SymbolTable.TryQuery(symbolName, out int offset))
+        if (s_symbolTable.TryQuery(symbolName, out int offset))
         {
             address = HandleHelper.MainHandleHandle + offset;
             return true;
         }
+
         address = default;
         return false;
 #endif
     }
 
     /// <summary>
-    /// Try to get address of function from main module by symbol
+    ///     Try to get address of function from main module by symbol
     /// </summary>
     /// <param name="symbolName">Symbol of function</param>
     /// <param name="address">Pointer of function</param>
@@ -59,42 +68,50 @@ public static partial class SymbolHelper
         return result;
     }
 
+#if WINDOWS
+    internal const string LibName = "Hosihikari.Preload";
+#endif
+
     /// <summary>
-    /// Get address of function from main module by symbol
+    ///     Get address of function from main module by symbol
     /// </summary>
     /// <param name="symbolName">Symbol of function</param>
     /// <returns>IntPtr of function</returns>
 #if WINDOWS
-    internal const string LibName = "Hosihikari.Preload";
     [LibraryImport(LibName, EntryPoint = "dlsym")]
     internal static unsafe partial nint Dlsym([MarshalAs(UnmanagedType.LPWStr)] string symbolName);
 #else
     public static nint Dlsym(string symbolName) =>
-        SymbolTable.Query(symbolName) + HandleHelper.MainHandleHandle;
+        s_symbolTable.Query(symbolName) + HandleHelper.MainHandleHandle;
 #endif
-
     /// <summary>
-    /// Get address of function from main module by symbol
+    ///     Get address of function from main module by symbol
     /// </summary>
     /// <param name="symbolName">Symbol of function</param>
     /// <returns>IntPtr of function</returns>
-    public static Lazy<nint> DlsymLazy(string symbolName) =>
-        new(() => Dlsym(symbolName));
+    public static Lazy<nint> DlsymLazy(string symbolName)
+    {
+        return new(() => Dlsym(symbolName));
+    }
 
     /// <summary>
-    /// Get address of function from main module by symbol
+    ///     Get address of function from main module by symbol
     /// </summary>
     /// <param name="symbolName">Symbol of function</param>
     /// <returns>Pointer of function</returns>
-    public static unsafe void* DlsymPointer(string symbolName) =>
-        Dlsym(symbolName).ToPointer();
-
+    public static unsafe void* DlsymPointer(string symbolName)
+    {
+        return Dlsym(symbolName).ToPointer();
+    }
 
     public static bool TryQuerySymbol([NotNullWhen(true)] out string? symbol, PropertyInfo fptrProperty)
     {
         symbol = null;
         SymbolAttribute? attr = fptrProperty.GetCustomAttribute<SymbolAttribute>();
-        if (attr is null) return false;
+        if (attr is null)
+        {
+            return false;
+        }
 
         symbol = attr.Symbol;
         return true;
@@ -114,7 +131,10 @@ public static partial class SymbolHelper
     {
         symbol = null;
         SymbolAttribute? attr = method.GetCustomAttribute<SymbolAttribute>();
-        if (attr is null) return false;
+        if (attr is null)
+        {
+            return false;
+        }
 
         symbol = attr.Symbol;
         return true;
@@ -131,7 +151,9 @@ public static partial class SymbolHelper
     }
 
     public static bool TryQuerySymbol([NotNullWhen(true)] out string? symbol, Delegate method)
-        => TryQuerySymbol(out symbol, method.Method);
+    {
+        return TryQuerySymbol(out symbol, method.Method);
+    }
 
     public static string QuerySymbol(Delegate method)
     {
@@ -139,6 +161,7 @@ public static partial class SymbolHelper
         {
             return symbol;
         }
+
         throw new InvalidOperationException();
     }
 }

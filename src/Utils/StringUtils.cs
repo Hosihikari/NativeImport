@@ -1,12 +1,11 @@
-﻿using System.Text;
-using Hosihikari.NativeInterop.Layer;
+﻿using Hosihikari.NativeInterop.Layer;
+using System.Text;
 
 namespace Hosihikari.NativeInterop.Utils;
 
 public static class StringUtils
 {
     /// <summary>
-    /// 
     /// </summary>
     /// <param name="strPtr"></param>
     /// <returns></returns>
@@ -19,7 +18,6 @@ public static class StringUtils
     }
 
     /// <summary>
-    /// 
     /// </summary>
     /// <param name="strPtr"></param>
     /// <returns></returns>
@@ -30,20 +28,23 @@ public static class StringUtils
         {
             return string.Empty;
         }
+
         ulong len = LibNative.std_string_length(strPtr);
         return len > 0 ? Encoding.UTF8.GetString(dataPtr, (int)len) : string.Empty;
     }
 
     /// <summary>
-    /// Converts a string to a null-terminated UTF-8 byte array.
+    ///     Converts a string to a null-terminated UTF-8 byte array.
     /// </summary>
     /// <param name="s"> string data </param>
     /// <returns>  null-terminated UTF-8 byte array </returns>
-    public static byte[] StringToManagedUtf8(string s) =>
-        StringToManagedUtf8(s, out _);
+    public static byte[] StringToManagedUtf8(string s)
+    {
+        return StringToManagedUtf8(s, out _);
+    }
 
     /// <summary>
-    /// Converts a string to a null-terminated UTF-8 byte array.
+    ///     Converts a string to a null-terminated UTF-8 byte array.
     /// </summary>
     /// <param name="s"> string data </param>
     /// <param name="length"> byte length </param>
@@ -55,6 +56,7 @@ public static class StringUtils
             length = 0;
             return [0];
         }
+
         Encoding utf8 = Encoding.UTF8;
         fixed (char* ptr = s)
         {
@@ -65,15 +67,17 @@ public static class StringUtils
                 utf8.GetBytes(ptr, s.Length, buf, length);
                 buf[length] = 0; // null-terminated
             }
+
             return buffer;
         }
     }
 
     /// <summary>
-    /// 
     /// </summary>
     /// <param name="data"></param>
     /// <returns></returns>
-    public static string Utf8ToString(ReadOnlySpan<byte> data) =>
-        data.Length > 0 ? Encoding.UTF8.GetString(data) : string.Empty;
+    public static string Utf8ToString(ReadOnlySpan<byte> data)
+    {
+        return data.Length > 0 ? Encoding.UTF8.GetString(data) : string.Empty;
+    }
 }

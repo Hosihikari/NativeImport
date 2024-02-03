@@ -5,7 +5,7 @@ namespace Hosihikari.NativeInterop.Hook;
 public static class Function
 {
     /// <summary>
-    /// Hook a function by its address.
+    ///     Hook a function by its address.
     /// </summary>
     /// <param name="address">The address of the function.</param>
     /// <param name="hook">The hook function you created.</param>
@@ -25,27 +25,30 @@ public static class Function
     }
 
     /// <summary>
-    /// Hook a function by its offset.
+    ///     Hook a function by its offset.
     /// </summary>
     /// <param name="offset">The offset of the function.</param>
     /// <param name="hook">The hook function you created.</param>
     /// <param name="org">The original function.</param>
     /// <param name="instance"></param>
     /// <returns>hook result (0 if succeed)</returns>
-    internal static unsafe HookResult Hook(
+    public static unsafe HookResult Hook(
         int offset,
         void* hook,
         out void* org,
         out HookInstance instance
-    ) => Hook(
+    )
+    {
+        return Hook(
             (HandleHelper.MainHandleHandle + offset).ToPointer(),
             hook,
             out org,
             out instance
         );
+    }
 
     /// <summary>
-    /// Hook a function by its offset.
+    ///     Hook a function by its offset.
     /// </summary>
     /// <param name="address">The address of the function.</param>
     /// <param name="hook">The hook function you created.</param>
@@ -58,10 +61,12 @@ public static class Function
         {
             throw new NullReferenceException(nameof(address));
         }
+
         if (hook == nint.Zero)
         {
             throw new NullReferenceException(nameof(hook));
         }
+
         unsafe
         {
             HookResult result = Hook(address.ToPointer(), hook.ToPointer(), out void* orgPtr, out instance);
@@ -71,13 +76,15 @@ public static class Function
     }
 
     /// <summary>
-    /// Hook a function by its offset.
+    ///     Hook a function by its offset.
     /// </summary>
     /// <param name="offset">The offset of the function.</param>
     /// <param name="hook">The hook function you created.</param>
     /// <param name="org">The original function.</param>
     /// <param name="instance"></param>
     /// <returns>hook result (0 if succeed)</returns>
-    public static HookResult Hook(int offset, nint hook, out nint org, out HookInstance instance) =>
-        Hook(HandleHelper.MainHandleHandle + offset, hook, out org, out instance);
+    public static HookResult Hook(int offset, nint hook, out nint org, out HookInstance instance)
+    {
+        return Hook(HandleHelper.MainHandleHandle + offset, hook, out org, out instance);
+    }
 }

@@ -2,7 +2,7 @@
 
 namespace Hosihikari.NativeInterop.Layer;
 
-public enum HookResult : int
+public enum HookResult
 {
     InternalError = -1,
     Success = 0
@@ -10,9 +10,8 @@ public enum HookResult : int
 
 internal static partial class LibHook
 {
-
 #if WINDOWS
-    private const string LibName = "Hosihikari.Preload";
+    private const string LibName = "Hosihikari.LeviLamina";
 #else
     private const string LibName = "dobby";
 #endif

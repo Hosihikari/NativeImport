@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Runtime.InteropServices;
 
 namespace Hosihikari.NativeInterop.Unmanaged.STL;
 
@@ -22,17 +17,21 @@ public unsafe struct StdErrorCategory
     {
         // 0
         public readonly delegate* unmanaged<StdErrorCategory*, void> destructor;
+
         // 1
         public readonly delegate* unmanaged<StdErrorCategory*, byte*> name;
+
         // 2
         public readonly delegate* unmanaged<StdErrorCategory*, int, StdString> message;
+
         // 3
         public readonly delegate* unmanaged<StdErrorCategory*, int, StdErrorCondition> default_error_condition;
+
         // 4
         public readonly delegate* unmanaged<StdErrorCategory*, int, in StdErrorCondition, bool> equivalent;
+
         // 5
         public readonly delegate* unmanaged<StdErrorCategory*, in StdErrorCode, int, bool> equivalent_overload;
-
         public static ulong VtableLength => 6;
     }
 }

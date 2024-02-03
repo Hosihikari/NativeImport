@@ -10,6 +10,5 @@ namespace Hosihikari.NativeInterop.Unmanaged.STL;
 public unsafe struct CxxStringView
 {
     public byte* ptr;
-
     public ulong length;
 }

@@ -10,7 +10,9 @@ public struct Result<T> where T : class, ICppInstance<T>
     public T GetInstance()
     {
         if (Value == nint.Zero)
+        {
             throw new InvalidOperationException("Null pointer.");
+        }
 
         T ret = T.ConstructInstance(Value, true, true);
         Value = nint.Zero;
@@ -23,9 +25,9 @@ public struct Result<T> where T : class, ICppInstance<T>
         {
             return;
         }
+
         T.DestructInstance(Value);
     }
 
     public nint Value { get; private set; }
 }
-

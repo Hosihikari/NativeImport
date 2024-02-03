@@ -1,15 +1,16 @@
 ﻿namespace Hosihikari.NativeInterop.Unmanaged;
 
-#pragma warning disable CS8500
 public readonly unsafe ref struct MoveHandle<T>
 {
-    private readonly T* _instance;
-
     internal MoveHandle(in T val)
     {
+#pragma warning disable CS8500
         fixed (T* ptr = &val)
-            _instance = ptr;
+        {
+            Target = ptr;
+        }
     }
 
-    public T* Target => _instance;
+    public T* Target { get; }
+#pragma warning restore CS8500
 }

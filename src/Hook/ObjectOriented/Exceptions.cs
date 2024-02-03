@@ -2,9 +2,9 @@
 
 namespace Hosihikari.NativeInterop.Hook.ObjectOriented;
 
-public class HookAlreadyInstalledException() : Exception($"Hook already registered");
+public class HookAlreadyInstalledException() : Exception("Hook already registered");
 
-public class HookNotInstalledException() : Exception($"Hook not installed");
+public class HookNotInstalledException() : Exception("Hook not installed");
 
 public class HookInstalledFailedException : Exception
 {
@@ -16,6 +16,7 @@ public class HookInstalledFailedException : Exception
 
     public HookResult Result { get; }
 }
+
 public class HookUninstalledFailedException : Exception
 {
     internal HookUninstalledFailedException(HookResult result)

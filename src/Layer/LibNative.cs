@@ -1,17 +1,14 @@
 using System.Runtime.InteropServices;
-using size_t = System.UInt64;
+using size_t = ulong;
 
 namespace Hosihikari.NativeInterop.Layer;
 
 internal static partial class LibNative
 {
-#if WINDOWS
-    internal const string LibName = "Hosihikari.Preload";
-#else
-    internal const string LibName = "layer";
-#endif
+    private const string LibName = "layer";
 
     #region memory
+
     [LibraryImport(LibName, EntryPoint = "operator_new")]
     internal static unsafe partial void* operator_new(size_t size);
 
@@ -23,6 +20,7 @@ internal static partial class LibNative
 
     [LibraryImport(LibName, EntryPoint = "operator_delete_array")]
     internal static unsafe partial void operator_delete_array(void* block);
+
     #endregion
 
     #region std::string

@@ -2,9 +2,9 @@
 
 public interface IHook
 {
+    bool HasInstalled { get; }
     void Install();
     void Uninstall();
-    bool HasInstalled { get; }
     bool TryInstall();
     bool TryUninstall();
 }

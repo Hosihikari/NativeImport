@@ -4,14 +4,15 @@ namespace Hosihikari.NativeInterop.Hook;
 
 public class HookInstance
 {
+    private unsafe void* _address;
+    private unsafe void* _original;
+
     internal unsafe HookInstance(void* address, void* original)
     {
         _address = address;
         _original = original;
     }
 
-    private unsafe void* _address;
-    private unsafe void* _original;
     public unsafe void* Original
     {
         get
@@ -31,6 +32,7 @@ public class HookInstance
             {
                 return result;
             }
+
             _address = null;
             _original = null;
             return result;
@@ -50,4 +52,3 @@ public class HookInstance
         }
     }
 }
-

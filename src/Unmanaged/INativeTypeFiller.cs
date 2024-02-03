@@ -7,7 +7,6 @@ public interface INativeTypeFiller<TFiller, out TManagedType>
     where TManagedType : class, ICppInstance<TManagedType>
 {
     public static abstract unsafe void Destruct(TFiller* @this);
-
     public static abstract implicit operator TManagedType(in TFiller filler);
 }
 
@@ -17,7 +16,8 @@ internal static class NativeTypeFillerHelper
         where TFiller : unmanaged
     {
         Type type = typeof(TFiller);
-        if (type.GetInterfaces().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(INativeTypeFiller<,>)))
+        if (type.GetInterfaces()
+            .Any(t => t.IsGenericType && (t.GetGenericTypeDefinition() == typeof(INativeTypeFiller<,>))))
         {
             result = (delegate* managed<TFiller*, void>)
                 type
@@ -27,6 +27,7 @@ internal static class NativeTypeFillerHelper
                     .ToPointer();
             return true;
         }
+
         result = null;
         return false;
     }

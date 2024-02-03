@@ -3,30 +3,27 @@
 public interface ICppInstanceNonGeneric : IDisposable
 {
     /// <summary>
-    /// noexcept
+    ///     noexcept
     /// </summary>
     public nint Pointer { get; set; }
 
     /// <summary>
-    /// noexcept
+    ///     noexcept
     /// </summary>
     public bool IsOwner { get; set; }
 
     /// <summary>
-    /// noexcept
+    ///     noexcept
     /// </summary>
     public bool IsTempStackValue { get; set; }
 
-    public void Destruct();
-
-
     /// <summary>
-    /// noexcept
+    ///     noexcept
     /// </summary>
     public static abstract ulong ClassSize { get; }
 
+    public void Destruct();
     public static abstract void DestructInstance(nint ptr);
-
     public static abstract object ConstructInstance(nint ptr, bool owns, bool isTempStackValue);
 }
 
@@ -36,13 +33,13 @@ public interface ICppInstance<TSelf> : ICppInstanceNonGeneric
     public new static abstract TSelf ConstructInstance(nint ptr, bool owns, bool isTempStackValue);
 
     /// <summary>
-    /// noexcept
+    ///     noexcept
     /// </summary>
     /// <param name="ins"></param>
     public static abstract implicit operator nint(TSelf ins);
 
     /// <summary>
-    /// noexcept
+    ///     noexcept
     /// </summary>
     /// <param name="ins"></param>
     public static abstract unsafe implicit operator void*(TSelf ins);

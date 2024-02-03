@@ -21,10 +21,14 @@ public readonly unsafe ref struct HeapAlloc<T> where T : unmanaged
             *ptr = defaultVal;
             ++ptr;
         }
+
         return ptr;
     }
 
-    public static ref T NewAsRef(in T val) => ref *New(val);
+    public static ref T NewAsRef(in T val)
+    {
+        return ref *New(val);
+    }
 
     public static void Delete(T* ptr)
     {
@@ -47,6 +51,13 @@ public readonly unsafe ref struct HeapAlloc<T> where T : unmanaged
 
 public readonly unsafe ref struct HeapAlloc
 {
-    public static void* New(ulong size) => LibNative.operator_new(size);
-    public static void Delete(void* block) => LibNative.operator_delete(block);
+    public static void* New(ulong size)
+    {
+        return LibNative.operator_new(size);
+    }
+
+    public static void Delete(void* block)
+    {
+        LibNative.operator_delete(block);
+    }
 }

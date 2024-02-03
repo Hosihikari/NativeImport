@@ -1,28 +1,20 @@
-﻿#if !WINDOWS
-
+﻿using Hosihikari.NativeInterop.Layer;
 using System.Buffers;
 using System.Runtime.InteropServices;
 using System.Text;
-using Hosihikari.NativeInterop.Layer;
 
 namespace Hosihikari.NativeInterop.Utils;
 
 public static class LinkUtils
 {
+#if !WINDOWS
     private const int Eintr = 4;
     private const int Eexist = 17;
 
     public static void CreateFileSymlink(string symlink, string pointingTo)
     {
-        if (symlink is null)
-        {
-            throw new ArgumentNullException(nameof(symlink));
-        }
-        if (pointingTo is null)
-        {
-            throw new ArgumentNullException(nameof(pointingTo));
-        }
-
+        ArgumentNullException.ThrowIfNull(symlink);
+        ArgumentNullException.ThrowIfNull(pointingTo);
         if (!File.Exists(pointingTo))
         {
             throw new FileNotFoundException(new FileNotFoundException().Message, pointingTo);
@@ -33,15 +25,8 @@ public static class LinkUtils
 
     public static void CreateDirectorySymlink(string symlink, string pointingTo)
     {
-        if (symlink is null)
-        {
-            throw new ArgumentNullException(nameof(symlink));
-        }
-        if (pointingTo is null)
-        {
-            throw new ArgumentNullException(nameof(pointingTo));
-        }
-
+        ArgumentNullException.ThrowIfNull(symlink);
+        ArgumentNullException.ThrowIfNull(pointingTo);
         if (!Directory.Exists(pointingTo))
         {
             throw new DirectoryNotFoundException();
@@ -56,6 +41,7 @@ public static class LinkUtils
         {
             throw new ArgumentException("Source and Target are the same");
         }
+
         while (LibC.Symlink(symlink, target) != nint.Zero)
         {
             int errno = Marshal.GetLastPInvokeError();
@@ -67,15 +53,18 @@ public static class LinkUtils
                 case Eexist:
                     throw new IOException("File already exists");
             }
+
             int hResult = ParseHResult(errno);
             Marshal.ThrowExceptionForHR(hResult);
         }
     }
 
-    private static int ParseHResult(int errno) =>
-        (errno & 0x80000000) is 0x80000000
+    private static int ParseHResult(int errno)
+    {
+        return (errno & 0x80000000) is 0x80000000
             ? errno
             : (errno & 0x0000FFFF) | unchecked((int)0x80070000);
+    }
 
     private const int BufferSize = 4097; // PATH_MAX is (usually?) 4096.
 
@@ -88,7 +77,6 @@ public static class LinkUtils
         {
             Encoding.UTF8.GetBytes(symlinkPath, 0, symlinkPath.Length, symlink, 0);
             symlink[symlinkSize] = 0;
-
             long size = LibC.Readlink(symlink, buffer, BufferSize);
             return Encoding.UTF8.GetString(buffer, 0, (int)size);
         }
@@ -107,11 +95,7 @@ public static class LinkUtils
 
     public static void Unlink(string path)
     {
-        if (path is null)
-        {
-            throw new ArgumentNullException(nameof(path));
-        }
-
+        ArgumentNullException.ThrowIfNull(path);
         while (LibC.Unlink(path) != nint.Zero)
         {
             int errno = Marshal.GetLastPInvokeError();
@@ -119,9 +103,10 @@ public static class LinkUtils
             {
                 continue; //retry
             }
+
             int hResult = ParseHResult(errno);
             Marshal.ThrowExceptionForHR(hResult);
         }
     }
-}
 #endif
+}

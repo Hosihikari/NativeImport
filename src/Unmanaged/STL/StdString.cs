@@ -1,41 +1,46 @@
-﻿using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using Hosihikari.NativeInterop.Generation;
+﻿using Hosihikari.NativeInterop.Generation;
+using Hosihikari.NativeInterop.Layer;
+#if WINDOWS
 using Hosihikari.NativeInterop.Utils;
+using System.Runtime.CompilerServices;
+#endif
+using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.Marshalling;
 
 namespace Hosihikari.NativeInterop.Unmanaged.STL;
 
 [PredefinedType(
     NativeTypeName = "basic_string<char, struct std::char_traits<char>, class std::allocator<char>>",
     NativeTypeNamespace = "std")]
-
 [StructLayout(LayoutKind.Sequential)]
 public unsafe struct StdString : IDisposable
 {
 #if WINDOWS
-
     private const int BufferSize = 16;
 
     [StructLayout(LayoutKind.Explicit)]
     public struct Storage
     {
-        [FieldOffset(0)]
-        public fixed byte buffer[BufferSize];
-
-        [FieldOffset(0)]
-        public byte* ptr;
+        [FieldOffset(0)] public fixed byte buffer[BufferSize];
+        [FieldOffset(0)] public byte* ptr;
     }
 
     //0
     public Storage storage;
+
     //16
     public ulong size;
+
     //24
     public ulong res;
 
     public void Clear()
     {
-        if (res > BufferSize) HeapAlloc.Delete(storage.ptr);
+        if (res > BufferSize)
+        {
+            HeapAlloc.Delete(storage.ptr);
+        }
+
         size = res = 0;
         storage.ptr = null;
     }
@@ -59,7 +64,10 @@ public unsafe struct StdString : IDisposable
         else
         {
             fixed (byte* p = @this.storage.buffer)
+            {
                 Unsafe.CopyBlock(p, ptr, (uint)size * sizeof(byte));
+            }
+
             @this.res = BufferSize;
         }
     }
@@ -68,13 +76,13 @@ public unsafe struct StdString : IDisposable
     private readonly ulong CalculateGrowth(ulong newSize)
     {
         ulong num = res;
-
         const ulong num2 = int.MaxValue / sizeof(byte);
         ulong num3 = num >> 1;
-        if (num > num2 - num3)
+        if (num > (num2 - num3))
         {
             return num2;
         }
+
         ulong num4 = num3 + num;
         return num4 < newSize ? newSize : num4;
     }
@@ -87,20 +95,15 @@ public unsafe struct StdString : IDisposable
             ulong oldCap = res;
             ulong newSize = oldSize + size;
             ulong newCap = CalculateGrowth(newSize);
-
             byte* temp = stackalloc byte[BufferSize];
-
             byte* newStr = newCap > BufferSize ? (byte*)HeapAlloc.New(newCap) : temp;
             byte* oldStr = oldCap > BufferSize ? storage.ptr : buf;
-
             byte* constructed = newStr;
-
             Unsafe.CopyBlock(constructed, oldStr, (uint)index * sizeof(byte));
             constructed += index;
             Unsafe.CopyBlock(constructed, ptr, (uint)size * sizeof(byte));
             constructed += size;
             Unsafe.CopyBlock(constructed, oldStr + index, (uint)(oldSize - index) * sizeof(byte));
-
             if (newCap > BufferSize)
             {
                 storage.ptr = newStr;
@@ -125,16 +128,16 @@ public unsafe struct StdString : IDisposable
     {
         fixed (byte* buf = storage.buffer)
         {
-            byte* str = null;
-            str = res > BufferSize ? storage.ptr : buf;
+            byte* str = res > BufferSize ? storage.ptr : buf;
             byte* temp = stackalloc byte[BufferSize];
             byte* buffer = size > BufferSize ? (byte*)HeapAlloc.New(size) : temp;
-
             Unsafe.CopyBlock(buffer, str + index, (uint)(size - index) * sizeof(byte));
             Unsafe.CopyBlock(str + index + size, buffer, (uint)size * sizeof(byte));
             Unsafe.CopyBlock(str + index, ptr, (uint)size * sizeof(byte));
-
-            if (size > BufferSize) HeapAlloc.Delete(buffer);
+            if (size > BufferSize)
+            {
+                HeapAlloc.Delete(buffer);
+            }
 
             size += size;
         }
@@ -151,9 +154,10 @@ public unsafe struct StdString : IDisposable
     {
         byte[] bytes = StringUtils.StringToManagedUtf8(str);
         res = size = (ulong)bytes.Length;
-
         fixed (byte* ptr = bytes)
+        {
             AllocateByPtr(ref this, ptr, size);
+        }
     }
 
     public StdString(ReadOnlySpan<byte> span)
@@ -169,78 +173,98 @@ public unsafe struct StdString : IDisposable
     {
         res = size = str.size;
         fixed (byte* ptr = str.Data)
+        {
             AllocateByPtr(ref this, ptr, str.size);
+        }
     }
 
     public StdString(MoveHandle<StdString> str)
     {
         Clear();
-
         StdString* target = str.Target;
-
         size = target->size;
         res = target->res;
         storage = target->storage;
-
         target->size = 0;
         target->res = 0;
         Unsafe.InitBlock(target->storage.buffer, 0, BufferSize);
     }
 
     public readonly ulong Size => size;
-
     public readonly ulong Capacity => res;
 
     public void Emplace(ulong index, in StdString str)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(index, size - 1);
-
-        fixed (byte* _buffer = str.storage.buffer)
+        fixed (byte* buffer = str.storage.buffer)
         {
-            if (str.size > res - size)
-                EmplaceReallocate(index, str.size > BufferSize ? str.storage.ptr : _buffer, str.size);
+            if (str.size > (res - size))
+            {
+                EmplaceReallocate(index, str.size > BufferSize ? str.storage.ptr : buffer, str.size);
+            }
             else
-                EmplaceWithUnusedCapacity(index, str.size > BufferSize ? str.storage.ptr : _buffer, str.size);
+            {
+                EmplaceWithUnusedCapacity(index, str.size > BufferSize ? str.storage.ptr : buffer, str.size);
+            }
         }
     }
 
-    public void EmplaceBack(in StdString str) => Emplace(Size - 1, str);
+    public void EmplaceBack(in StdString str)
+    {
+        Emplace(Size - 1, str);
+    }
 
     public Span<byte> Data
     {
         get
         {
             if (size > BufferSize)
+            {
                 return new(storage.ptr, (int)size);
-            else
-                fixed (byte* ptr = storage.buffer)
-                    return new(ptr, (int)size);
+            }
+
+            fixed (byte* ptr = storage.buffer)
+            {
+                return new(ptr, (int)size);
+            }
         }
     }
 
     public readonly ulong Length => size;
 
-    public void Append(in StdString str) => EmplaceBack(str);
+    public void Append(in StdString str)
+    {
+        EmplaceBack(str);
+    }
 
-    public void Append(string str) => EmplaceBack(new(str));
+    public void Append(string str)
+    {
+        EmplaceBack(new(str));
+    }
 
-    public void Dispose() => Clear();
-
+    public void Dispose()
+    {
+        Clear();
+    }
 #else
-
     //0
     public byte* data;
+
     //8
     public ulong length;
+
     //16
     public StdString* unknownStringPtr;
+
     //24
     public void* unknownPtr;
 
     public void Dispose()
     {
         fixed (StdString* ptr = &this)
+        {
             LibNative.std_string_destructor(ptr);
+        }
     }
 
     public StdString()
@@ -273,7 +297,9 @@ public unsafe struct StdString : IDisposable
     public StdString(MoveHandle<StdString> str)
     {
         fixed (StdString* ptr = &this)
+        {
             LibNative.std_string_placement_new_move(ptr, str.Target);
+        }
     }
 
     public ReadOnlySpan<byte> Data
@@ -284,11 +310,12 @@ public unsafe struct StdString : IDisposable
             {
                 byte* data = LibNative.std_string_data(ptr);
                 ulong len = LibNative.std_string_length(ptr);
-                if (data is null || len <= 0)
+                if (data is null || (len <= 0))
                 {
                     return ReadOnlySpan<byte>.Empty;
                 }
-                return new ReadOnlySpan<byte>(ptr, (int)len);
+
+                return new(ptr, (int)len);
             }
         }
     }
@@ -334,7 +361,9 @@ public unsafe struct StdString : IDisposable
     public override string ToString()
     {
         fixed (byte* data = Data)
+        {
             return Utf8StringMarshaller.ConvertToManaged(data) ?? string.Empty;
+        }
     }
 #endif
 }
@@ -383,7 +412,6 @@ public unsafe struct StdString : IDisposable
 
 //    public bool IsTempStackValue { get; set; }
 
-
 //    public static StdString ConstructInstance(nint ptr, bool owns, bool isTempStackValue) => new(ptr, owns, isTempStackValue);
 
 //    public static void DestructInstance(nint ptr) => LibNative.std_string_destructor(ptr.ToPointer());
@@ -392,7 +420,6 @@ public unsafe struct StdString : IDisposable
 
 //    public static StdString ConstructInstanceByCopy(StdString right) => new(right);
 //    public static StdString ConstructInstanceByMove(MoveHandle<StdString> right) => new(right);
-
 
 //    public static implicit operator nint(StdString str) => new(str._pointer);
 
@@ -409,7 +436,6 @@ public unsafe struct StdString : IDisposable
 //            if (IsTempStackValue is false) LibNative.operator_delete(this);
 //        }
 
-
 //        disposedValue = true;
 //    }
 
@@ -420,7 +446,6 @@ public unsafe struct StdString : IDisposable
 //        Dispose(disposing: true);
 //        GC.SuppressFinalize(this);
 //    }
-
 
 //    private void* _pointer;
 //    //flag to determine if the pointer is created by this lib and should be deleted in the destructor

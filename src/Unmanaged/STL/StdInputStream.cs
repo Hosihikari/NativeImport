@@ -1,32 +1,31 @@
-using System.Runtime.InteropServices;
 using Hosihikari.NativeInterop.Layer;
+using System.Runtime.InteropServices;
 
 namespace Hosihikari.NativeInterop.Unmanaged.STL;
 
 /// <summary>
-/// std::istream wrapper
+///     std::istream wrapper
 /// </summary>
 public class StdInputStream
 {
-    private readonly unsafe void* _pointer;
     private readonly unsafe byte* _buffer;
-    private readonly unsafe void* _nativebuffer;
 
     //flag to determine if the pointer is created by this lib and should be deleted in the destructor
     private readonly bool _isOwner;
-    public unsafe void* Pointer => _pointer;
+    private readonly unsafe void* _nativeBuffer;
+    private readonly unsafe void* _pointer;
 
     public StdInputStream(ReadOnlySpan<byte> data)
     {
         unsafe
         {
             _buffer = (byte*)NativeMemory.Alloc((nuint)data.Length);
-            data.CopyTo(new Span<byte>(_buffer, data.Length));
+            data.CopyTo(new(_buffer, data.Length));
             LibNative.std_istream_new(
                 _buffer,
                 data.Length,
                 out _pointer,
-                out _nativebuffer
+                out _nativeBuffer
             );
             _isOwner = true;
         }
@@ -38,6 +37,8 @@ public class StdInputStream
         _isOwner = false;
     }
 
+    public unsafe void* Pointer => _pointer;
+
     ~StdInputStream()
     {
         unsafe
@@ -46,11 +47,13 @@ public class StdInputStream
             {
                 return;
             }
+
             if (_buffer is not null)
             {
                 NativeMemory.Free(_buffer);
             }
-            LibNative.std_istream_delete(_pointer, _nativebuffer);
+
+            LibNative.std_istream_delete(_pointer, _nativeBuffer);
         }
     }
 
@@ -74,11 +77,15 @@ public class StdInputStream
             {
                 data = data.AsSpan(0, end).ToArray();
             }
+
             writer.Write(data);
             writer.Flush();
             return ms.ToArray();
         }
     }
 
-    public static unsafe implicit operator void*(StdInputStream stream) => stream.Pointer;
+    public static unsafe implicit operator void*(StdInputStream stream)
+    {
+        return stream.Pointer;
+    }
 }
