@@ -22,7 +22,7 @@ public unsafe partial struct StdVector : ITypeReferenceProvider
 
     private static Regex StdVectorRegex()
     {
-        return RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+        return OperatingSystem.IsWindows()
             ? WinStdVectorRegex()
             : throw new NotImplementedException();
     }

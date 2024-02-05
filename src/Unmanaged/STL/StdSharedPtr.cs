@@ -15,7 +15,7 @@ public unsafe partial struct StdSharedPtr : ITypeReferenceProvider
 
     private static Regex StdSharedPtrRegex()
     {
-        return RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+        return OperatingSystem.IsWindows()
             ? WinStdSharedPtrRegex()
             : throw new NotImplementedException();
     }

@@ -2,7 +2,6 @@
 using Hosihikari.NativeInterop.Unmanaged.Attributes;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Runtime.InteropServices;
 
 namespace Hosihikari.NativeInterop;
 
@@ -12,7 +11,7 @@ public static class SymbolHelper
 
     static SymbolHelper()
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if (OperatingSystem.IsWindows())
         {
             return;
         }
@@ -28,7 +27,7 @@ public static class SymbolHelper
     /// <returns>Is symbol available</returns>
     public static bool TryDlsym(string symbolName, out nint address)
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if (OperatingSystem.IsWindows())
         {
             nint ptr = Dlsym(symbolName);
             if (ptr == nint.Zero)
