@@ -45,7 +45,7 @@ public sealed class StdInputStream
         {
             if (!_isOwner)
             {
-                return;
+                throw new NullReferenceException();
             }
 
             if (_buffer is not null)

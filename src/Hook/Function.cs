@@ -1,5 +1,4 @@
 ﻿using Hosihikari.NativeInterop.Import;
-using LibHook = Hosihikari.NativeInterop.Import.LibHook;
 
 namespace Hosihikari.NativeInterop.Hook;
 
@@ -20,6 +19,16 @@ public static class Function
         out HookInstance instance
     )
     {
+        if (address is null)
+        {
+            throw new NullReferenceException(nameof(address));
+        }
+
+        if (hook is null)
+        {
+            throw new NullReferenceException(nameof(hook));
+        }
+
         HookResult result = LibHook.Hook(address, hook, out org);
         instance = new(address, org);
         return result;
@@ -58,16 +67,6 @@ public static class Function
     /// <returns>hook result (0 if succeed)</returns>
     public static HookResult Hook(nint address, nint hook, out nint org, out HookInstance instance)
     {
-        if (address == nint.Zero)
-        {
-            throw new NullReferenceException(nameof(address));
-        }
-
-        if (hook == nint.Zero)
-        {
-            throw new NullReferenceException(nameof(hook));
-        }
-
         unsafe
         {
             HookResult result = Hook(address.ToPointer(), hook.ToPointer(), out void* orgPtr, out instance);

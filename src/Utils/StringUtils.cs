@@ -26,7 +26,7 @@ public static class StringUtils
         byte* dataPtr = LibNative.std_string_data(strPtr);
         if (dataPtr is null)
         {
-            return string.Empty;
+            throw new NullReferenceException();
         }
 
         ulong len = LibNative.std_string_length(strPtr);

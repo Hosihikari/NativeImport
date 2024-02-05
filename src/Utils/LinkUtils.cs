@@ -16,11 +16,9 @@ public static class LinkUtils
 
     public static void CreateFileSymlink(string symlink, string pointingTo)
     {
-        ArgumentNullException.ThrowIfNull(symlink);
-        ArgumentNullException.ThrowIfNull(pointingTo);
         if (!File.Exists(pointingTo))
         {
-            throw new FileNotFoundException(new FileNotFoundException().Message, pointingTo);
+            throw new FileNotFoundException(default, pointingTo);
         }
 
         CreateSymlinkInternal(symlink, pointingTo);
@@ -28,8 +26,6 @@ public static class LinkUtils
 
     public static void CreateDirectorySymlink(string symlink, string pointingTo)
     {
-        ArgumentNullException.ThrowIfNull(symlink);
-        ArgumentNullException.ThrowIfNull(pointingTo);
         if (!Directory.Exists(pointingTo))
         {
             throw new DirectoryNotFoundException();
@@ -40,6 +36,8 @@ public static class LinkUtils
 
     private static void CreateSymlinkInternal(string symlink, string target)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(symlink);
+        ArgumentException.ThrowIfNullOrWhiteSpace(target);
         if (symlink == target)
         {
             throw new ArgumentException("Source and Target are the same");
@@ -96,7 +94,7 @@ public static class LinkUtils
 
     public static void Unlink(string path)
     {
-        ArgumentNullException.ThrowIfNull(path);
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
         while (LibC.Unlink(path) != nint.Zero)
         {
             int errno = Marshal.GetLastPInvokeError();

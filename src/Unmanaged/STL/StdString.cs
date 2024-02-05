@@ -1,5 +1,5 @@
 ﻿using Hosihikari.NativeInterop.Generation;
-using Hosihikari.NativeInterop.Layer;
+using Hosihikari.NativeInterop.Import;
 #if WINDOWS
 using Hosihikari.NativeInterop.Utils;
 using System.Runtime.CompilerServices;

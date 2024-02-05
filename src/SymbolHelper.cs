@@ -114,7 +114,7 @@ public static class SymbolHelper
             return symbol;
         }
 
-        throw new InvalidOperationException();
+        throw new InvalidDataException();
     }
 
     public static bool TryQuerySymbol([NotNullWhen(true)] out string? symbol, MethodInfo method)
@@ -137,7 +137,7 @@ public static class SymbolHelper
             return symbol;
         }
 
-        throw new InvalidOperationException();
+        throw new InvalidDataException();
     }
 
     public static bool TryQuerySymbol([NotNullWhen(true)] out string? symbol, Delegate method)
@@ -152,6 +152,6 @@ public static class SymbolHelper
             return symbol;
         }
 
-        throw new InvalidOperationException();
+        throw new InvalidDataException();
     }
 }
