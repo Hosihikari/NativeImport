@@ -22,12 +22,12 @@ public static class CppTypeSystem
         where T : class, ICppInstance<T>
         where TVtable : unmanaged, ICppVtable
     {
-        if (cheekAttribute && typeof(T).GetCustomAttribute<VirtualCppClassAttribute>() is not null)
+        if (!cheekAttribute || typeof(T).GetCustomAttribute<VirtualCppClassAttribute>() is not null)
         {
             return GetVTable<TVtable>((void*)ptr);
         }
 
-        throw new InvalidOperationException("\'VirtualCppClassAttribute\' instance is null.");
+        throw new NullReferenceException();
     }
 
     public static unsafe ValuePointer<TVtable> GetVTable<T, TVtable>(Pointer<T> ptr, bool cheekAttribute = true)
@@ -69,7 +69,7 @@ public static class CppTypeSystem
 }
 
 [AttributeUsage(AttributeTargets.Method)]
-public class OverrideAttribute(int virtualMethodIndex) : Attribute
+public sealed class OverrideAttribute(int virtualMethodIndex) : Attribute
 {
     public int VirtualMethodIndex { get; } = virtualMethodIndex;
 }
@@ -98,7 +98,11 @@ public unsafe interface INativeVirtualMethodOverrideProvider<T, TVtable>
                 continue;
             }
 
-            _ = method.GetCustomAttribute<UnmanagedCallersOnlyAttribute>() ?? throw new InvalidProgramException();
+            if (method.GetCustomAttribute<UnmanagedCallersOnlyAttribute>() is null)
+            {
+                throw new InvalidProgramException();
+            }
+
             list.Add((overrideAttr.VirtualMethodIndex, method.MethodHandle.GetFunctionPointer()));
         }
 

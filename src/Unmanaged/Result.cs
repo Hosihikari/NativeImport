@@ -11,7 +11,7 @@ public struct Result<T> where T : class, ICppInstance<T>
     {
         if (Value == nint.Zero)
         {
-            throw new InvalidOperationException("Null pointer.");
+            throw new NullReferenceException();
         }
 
         T ret = T.ConstructInstance(Value, true, true);

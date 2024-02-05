@@ -1,18 +1,13 @@
 ﻿using Hosihikari.NativeInterop.Generation;
-using Hosihikari.NativeInterop.Layer;
+using Hosihikari.NativeInterop.Import;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using size_t = ulong;
 
 namespace Hosihikari.NativeInterop.Unmanaged.STL;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe
-#if WINDOWS
-partial
-#endif
-    struct CxxVector : ITypeReferenceProvider
+public unsafe partial struct StdVector : ITypeReferenceProvider
 {
     public void* begin;
 
@@ -20,26 +15,29 @@ partial
 
     //compressed_pair<pointer,allocator<T>>
     public void* end_cap;
-#if WINDOWS
+
+
     [GeneratedRegex("^class std::vector<(?<class_type>.*), class std::allocator<(\\k<class_type>)>>")]
-    internal static partial Regex StdVectorRegex();
-#else
-    internal static Regex StdVectorRegex()
+    private static partial Regex WinStdVectorRegex();
+
+    private static Regex StdVectorRegex()
     {
-        throw new NotImplementedException();
+        return RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? WinStdVectorRegex()
+            : throw new NotImplementedException();
     }
-#endif
+
     public static Regex Regex => StdVectorRegex();
 
     public static Type Matched(Match match)
     {
-        return typeof(CxxVector);
+        return typeof(StdVector);
     }
 }
 
 public struct Unknown;
 
-public unsafe class StdVector<T> :
+public sealed unsafe class StdVector<T> :
     ICppInstance<StdVector<T>>,
     IMoveableCppInstance<StdVector<T>>,
     ICopyableCppInstance<StdVector<T>>
@@ -47,9 +45,9 @@ public unsafe class StdVector<T> :
 {
     private static readonly bool IsFiller;
     private static readonly delegate* managed<T*, void> DtorFptr;
-    private static readonly size_t max_size = size_t.MaxValue / (size_t)sizeof(T);
-    private CxxVector* _pointer;
+    private static readonly ulong s_maxSize = ulong.MaxValue / (ulong)sizeof(T);
     private bool _disposedValue;
+    private StdVector* _pointer;
 
     static StdVector()
     {
@@ -58,20 +56,20 @@ public unsafe class StdVector<T> :
 
     public StdVector(nint ptr, bool isOwner = false, bool isTempStackValue = true)
     {
-        _pointer = (CxxVector*)ptr.ToPointer();
+        _pointer = (StdVector*)ptr.ToPointer();
         IsOwner = isOwner;
     }
 
     public StdVector(StdVector<T> vec)
     {
-        CxxVector* ptr = vec._pointer;
+        StdVector* ptr = vec._pointer;
         if (ptr is null)
         {
             throw new NullReferenceException(nameof(vec._pointer));
         }
 
-        size_t size = vec.Size();
-        _pointer = HeapAlloc<CxxVector>.New(default);
+        ulong size = vec.Size();
+        _pointer = HeapAlloc<StdVector>.New(default);
         First = HeapAlloc<T>.NewArray(size);
         Unsafe.CopyBlock(First, vec.First, (uint)size * (uint)sizeof(T));
         Last = First + size;
@@ -84,7 +82,7 @@ public unsafe class StdVector<T> :
     {
         throw new NotImplementedException();
 
-        //CxxVectorDesc* ptr = vec.Target._pointer;
+        //StdVectorDesc* ptr = vec.Target._pointer;
         //if (ptr is null)
         //{
         //    throw new NullReferenceException(nameof(vec.Target._pointer));
@@ -102,23 +100,23 @@ public unsafe class StdVector<T> :
 
     public StdVector(nint pointer)
     {
-        _pointer = (CxxVector*)pointer.ToPointer();
+        _pointer = (StdVector*)pointer.ToPointer();
         IsOwner = false;
         IsTempStackValue = true;
     }
 
     public StdVector(void* pointer)
     {
-        _pointer = (CxxVector*)pointer;
+        _pointer = (StdVector*)pointer;
         IsOwner = false;
         IsTempStackValue = true;
     }
 
     public StdVector()
     {
-        _pointer = (CxxVector*)Marshal.AllocHGlobal(sizeof(CxxVector)).ToPointer();
+        _pointer = (StdVector*)Marshal.AllocHGlobal(sizeof(StdVector)).ToPointer();
         IsOwner = true;
-        Unsafe.InitBlock(_pointer, 0, (uint)sizeof(CxxVector));
+        Unsafe.InitBlock(_pointer, 0, (uint)sizeof(StdVector));
     }
 
     private T* First
@@ -139,7 +137,7 @@ public unsafe class StdVector<T> :
         set => _pointer->end_cap = value;
     }
 
-    public ref T this[size_t index]
+    public ref T this[ulong index]
     {
         get
         {
@@ -157,14 +155,14 @@ public unsafe class StdVector<T> :
         return new(right);
     }
 
-    public static size_t ClassSize => 24ul;
+    public static ulong ClassSize => 24ul;
     public bool IsOwner { get; set; }
     public bool IsTempStackValue { get; set; }
 
     public nint Pointer
     {
         get => new(_pointer);
-        set => _pointer = (CxxVector*)value.ToPointer();
+        set => _pointer = (StdVector*)value.ToPointer();
     }
 
     public static StdVector<T> ConstructInstance(nint ptr, bool owns, bool isTempStackValue)
@@ -174,12 +172,12 @@ public unsafe class StdVector<T> :
 
     public static void DestructInstance(nint ptr)
     {
-        CxxVector* p = (CxxVector*)ptr.ToPointer();
+        StdVector* p = (StdVector*)ptr.ToPointer();
         if (IsFiller)
         {
             using StdVector<T> vector = new(ptr);
-            size_t size = vector.Size();
-            for (size_t i = 0; i < size; ++i)
+            ulong size = vector.Size();
+            for (ulong i = 0; i < size; ++i)
             {
                 fixed (T* currentPtr = &vector[i])
                 {
@@ -229,7 +227,7 @@ public unsafe class StdVector<T> :
         return new(right.Target);
     }
 
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         if (_disposedValue)
         {
@@ -251,26 +249,26 @@ public unsafe class StdVector<T> :
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public size_t Size()
+    public ulong Size()
     {
-        return (size_t)((Last - First) / sizeof(T));
+        return (ulong)((Last - First) / sizeof(T));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public size_t Capacity()
+    public ulong Capacity()
     {
-        return (size_t)((End - First) / sizeof(T));
+        return (ulong)((End - First) / sizeof(T));
     }
 
-    private size_t CalculateGrowth(size_t newSize)
+    private ulong CalculateGrowth(ulong newSize)
     {
-        size_t oldCapacity = Capacity();
-        if (oldCapacity > (max_size - (oldCapacity / 2)))
+        ulong oldCapacity = Capacity();
+        if (oldCapacity > (s_maxSize - (oldCapacity / 2)))
         {
-            return max_size;
+            return s_maxSize;
         }
 
-        size_t geometric = oldCapacity + (oldCapacity / 2);
+        ulong geometric = oldCapacity + (oldCapacity / 2);
         return geometric >= newSize ? geometric : newSize;
     }
 
@@ -284,8 +282,8 @@ public unsafe class StdVector<T> :
             return ref Unsafe.AsRef<T>(last);
         }
 
-        size_t newCapacity = CalculateGrowth(Size() + 1);
-        size_t oldSize = Size();
+        ulong newCapacity = CalculateGrowth(Size() + 1);
+        ulong oldSize = Size();
         T* newVec = (T*)Marshal.AllocHGlobal((int)newCapacity * sizeof(T)).ToPointer();
         Unsafe.CopyBlock(newVec, First, (uint)((int)oldSize * sizeof(T)));
         Unsafe.Write(newVec + oldSize, val);
@@ -302,11 +300,11 @@ public unsafe class StdVector<T> :
 
     public struct StdVectorFiller : INativeTypeFiller<StdVectorFiller, StdVector<T>>
     {
-        public CxxVector cxxVector;
+        public StdVector StdVector;
 
         static StdVectorFiller()
         {
-            if (sizeof(StdVectorFiller) != 24)
+            if (sizeof(StdVectorFiller) is not 24)
             {
                 throw new InvalidOperationException();
             }

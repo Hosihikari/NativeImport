@@ -1,4 +1,4 @@
-﻿using Hosihikari.NativeInterop.Layer;
+﻿using Hosihikari.NativeInterop.Import;
 using System.Runtime.InteropServices;
 
 namespace Hosihikari.NativeInterop.Hook.ObjectOriented;

@@ -2,28 +2,23 @@
 using Hosihikari.NativeInterop.Unmanaged.Attributes;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-#if WINDOWS
 using System.Runtime.InteropServices;
-#endif
 
 namespace Hosihikari.NativeInterop;
 
-public static
-#if WINDOWS
-    partial
-#endif
-    class SymbolHelper
+public static class SymbolHelper
 {
+    private static readonly ElfSymbolQueryTable? s_symbolTable;
+
     static SymbolHelper()
     {
-#if WINDOWS
-        s_symbolTable = throw new NotSupportedException();
-#else
-        s_symbolTable = new("bedrock_server_symbols.debug");
-#endif
-    }
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
 
-    private static readonly ElfSymbolQueryTable s_symbolTable;
+        s_symbolTable = new("bedrock_server_symbols.debug");
+    }
 
     /// <summary>
     ///     Try to get address of function from main module by symbol
@@ -33,26 +28,27 @@ public static
     /// <returns>Is symbol available</returns>
     public static bool TryDlsym(string symbolName, out nint address)
     {
-#if WINDOWS
-        nint ptr = Dlsym(symbolName);
-        if (ptr != nint.Zero)
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
+            nint ptr = Dlsym(symbolName);
+            if (ptr == nint.Zero)
+            {
+                address = default;
+                return false;
+            }
+
             address = ptr;
             return true;
         }
 
-        address = default;
-        return false;
-#else
-        if (s_symbolTable.TryQuery(symbolName, out int offset))
+        if (!s_symbolTable!.TryQuery(symbolName, out int offset))
         {
-            address = HandleHelper.MainHandleHandle + offset;
-            return true;
+            address = default;
+            return false;
         }
 
-        address = default;
-        return false;
-#endif
+        address = HandleHelper.MainHandleHandle + offset;
+        return true;
     }
 
     /// <summary>
@@ -68,22 +64,16 @@ public static
         return result;
     }
 
-#if WINDOWS
-    internal const string LibName = "Hosihikari.Preload";
-#endif
-
     /// <summary>
     ///     Get address of function from main module by symbol
     /// </summary>
     /// <param name="symbolName">Symbol of function</param>
     /// <returns>IntPtr of function</returns>
-#if WINDOWS
-    [LibraryImport(LibName, EntryPoint = "dlsym")]
-    internal static unsafe partial nint Dlsym([MarshalAs(UnmanagedType.LPWStr)] string symbolName);
-#else
-    public static nint Dlsym(string symbolName) =>
-        s_symbolTable.Query(symbolName) + HandleHelper.MainHandleHandle;
-#endif
+    public static nint Dlsym(string symbolName)
+    {
+        return s_symbolTable!.Query(symbolName) + HandleHelper.MainHandleHandle;
+    }
+
     /// <summary>
     ///     Get address of function from main module by symbol
     /// </summary>

@@ -1,12 +1,12 @@
-﻿using Hosihikari.NativeInterop.Layer;
+﻿using Hosihikari.NativeInterop.Import;
 
 namespace Hosihikari.NativeInterop.Hook.ObjectOriented;
 
-public class HookAlreadyInstalledException() : Exception("Hook already registered");
+public sealed class HookAlreadyInstalledException() : Exception("Hook already registered");
 
-public class HookNotInstalledException() : Exception("Hook not installed");
+public sealed class HookNotInstalledException() : Exception("Hook not installed");
 
-public class HookInstalledFailedException : Exception
+public sealed class HookInstalledFailedException : Exception
 {
     internal HookInstalledFailedException(HookResult result)
         : base($"Hook installed failed, result: {result}")
@@ -17,7 +17,7 @@ public class HookInstalledFailedException : Exception
     public HookResult Result { get; }
 }
 
-public class HookUninstalledFailedException : Exception
+public sealed class HookUninstalledFailedException : Exception
 {
     internal HookUninstalledFailedException(HookResult result)
         : base($"Hook uninstalled failed, result: {result}")

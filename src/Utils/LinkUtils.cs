@@ -1,15 +1,18 @@
-﻿using Hosihikari.NativeInterop.Layer;
+﻿using Hosihikari.NativeInterop.Import;
 using System.Buffers;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Text;
 
 namespace Hosihikari.NativeInterop.Utils;
 
+[UnsupportedOSPlatform("windows")]
 public static class LinkUtils
 {
-#if !WINDOWS
     private const int Eintr = 4;
     private const int Eexist = 17;
+
+    private const int BufferSize = 4097; // PATH_MAX is (usually?) 4096.
 
     public static void CreateFileSymlink(string symlink, string pointingTo)
     {
@@ -66,8 +69,6 @@ public static class LinkUtils
             : (errno & 0x0000FFFF) | unchecked((int)0x80070000);
     }
 
-    private const int BufferSize = 4097; // PATH_MAX is (usually?) 4096.
-
     public static string ReadLink(string symlinkPath)
     {
         int symlinkSize = Encoding.UTF8.GetByteCount(symlinkPath);
@@ -108,5 +109,4 @@ public static class LinkUtils
             Marshal.ThrowExceptionForHR(hResult);
         }
     }
-#endif
 }

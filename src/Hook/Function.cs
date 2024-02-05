@@ -1,4 +1,5 @@
-﻿using Hosihikari.NativeInterop.Layer;
+﻿using Hosihikari.NativeInterop.Import;
+using LibHook = Hosihikari.NativeInterop.Import.LibHook;
 
 namespace Hosihikari.NativeInterop.Hook;
 

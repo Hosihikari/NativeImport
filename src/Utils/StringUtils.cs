@@ -1,4 +1,4 @@
-﻿using Hosihikari.NativeInterop.Layer;
+﻿using Hosihikari.NativeInterop.Import;
 using System.Text;
 
 namespace Hosihikari.NativeInterop.Utils;

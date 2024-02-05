@@ -1,4 +1,4 @@
-using Hosihikari.NativeInterop.Layer;
+using Hosihikari.NativeInterop.Import;
 using System.Runtime.InteropServices;
 
 namespace Hosihikari.NativeInterop.Unmanaged.STL;
@@ -6,7 +6,7 @@ namespace Hosihikari.NativeInterop.Unmanaged.STL;
 /// <summary>
 ///     std::istream wrapper
 /// </summary>
-public class StdInputStream
+public sealed class StdInputStream
 {
     private readonly unsafe byte* _buffer;
 

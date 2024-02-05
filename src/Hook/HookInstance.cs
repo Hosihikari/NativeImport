@@ -1,8 +1,9 @@
-using Hosihikari.NativeInterop.Layer;
+using Hosihikari.NativeInterop.Import;
+using LibHook = Hosihikari.NativeInterop.Import.LibHook;
 
 namespace Hosihikari.NativeInterop.Hook;
 
-public class HookInstance
+public sealed class HookInstance
 {
     private unsafe void* _address;
     private unsafe void* _original;
