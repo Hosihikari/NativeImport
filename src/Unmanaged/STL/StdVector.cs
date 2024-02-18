@@ -2,6 +2,7 @@
 using Hosihikari.NativeInterop.Import;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Text.RegularExpressions;
 
 namespace Hosihikari.NativeInterop.Unmanaged.STL;
@@ -16,18 +17,11 @@ public unsafe partial struct StdVector : ITypeReferenceProvider
     //compressed_pair<pointer,allocator<T>>
     public void* end_cap;
 
-
+    [SupportedOSPlatform("windows")]
     [GeneratedRegex("^class std::vector<(?<class_type>.*), class std::allocator<(\\k<class_type>)>>")]
-    private static partial Regex WinStdVectorRegex();
+    private static partial Regex StdVectorRegex();
 
-    private static Regex StdVectorRegex()
-    {
-        return OperatingSystem.IsWindows()
-            ? WinStdVectorRegex()
-            : throw new NotImplementedException();
-    }
-
-    public static Regex Regex => StdVectorRegex();
+    [SupportedOSPlatform("windows")] public static Regex Regex => StdVectorRegex();
 
     public static Type Matched(Match match)
     {
@@ -78,25 +72,23 @@ public sealed unsafe class StdVector<T> :
         IsTempStackValue = false;
     }
 
-    public StdVector(MoveHandle<StdVector<T>> vec)
-    {
-        throw new NotImplementedException();
-
-        //StdVectorDesc* ptr = vec.Target._pointer;
-        //if (ptr is null)
-        //{
-        //    throw new NullReferenceException(nameof(vec.Target._pointer));
-        //}
-
-        //Destruct();
-        //First = vec.Target.First;
-        //Last = vec.Target.Last;
-        //End = vec.Target.End;
-
-        //vec.Target.First = null;
-        //vec.Target.Last = null;
-        //vec.Target.End = null;
-    }
+    // public StdVector(MoveHandle<StdVector<T>> vec)
+    // {
+    //     StdVectorDesc* ptr = vec.Target._pointer;
+    //     if (ptr is null)
+    //     {
+    //         throw new NullReferenceException(nameof(vec.Target._pointer));
+    //     }
+    //
+    //     Destruct();
+    //     First = vec.Target.First;
+    //     Last = vec.Target.Last;
+    //     End = vec.Target.End;
+    //
+    //     vec.Target.First = null;
+    //     vec.Target.Last = null;
+    //     vec.Target.End = null;
+    // }
 
     public StdVector(nint pointer)
     {

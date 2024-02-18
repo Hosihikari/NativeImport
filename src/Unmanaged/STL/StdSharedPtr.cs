@@ -1,5 +1,6 @@
 ﻿using Hosihikari.NativeInterop.Generation;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Text.RegularExpressions;
 
 namespace Hosihikari.NativeInterop.Unmanaged.STL;
@@ -10,17 +11,11 @@ public unsafe partial struct StdSharedPtr : ITypeReferenceProvider
     public void* ptr;
     public void* ctr;
 
+    [SupportedOSPlatform("windows")]
     [GeneratedRegex("^class std::shared_ptr<(?<class_type>.*)>")]
-    private static partial Regex WinStdSharedPtrRegex();
+    private static partial Regex StdSharedPtrRegex();
 
-    private static Regex StdSharedPtrRegex()
-    {
-        return OperatingSystem.IsWindows()
-            ? WinStdSharedPtrRegex()
-            : throw new NotImplementedException();
-    }
-
-    public static Regex Regex => StdSharedPtrRegex();
+    [SupportedOSPlatform("windows")] public static Regex Regex => StdSharedPtrRegex();
 
     public static Type Matched(Match match)
     {
