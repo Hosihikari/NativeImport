@@ -24,6 +24,6 @@ internal static partial class LibHook
     public static partial HookResult Unhook(nint address);
 
     [SupportedOSPlatform("windows")]
-    [LibraryImport(LibName, EntryPoint = "resolveSymbol", StringMarshalling = StringMarshalling.Utf16)]
+    [LibraryImport(LibName, EntryPoint = "resolveSymbol", StringMarshalling = StringMarshalling.Utf8)]
     public static partial nint ResolveSymbol(string symbol);
 }
