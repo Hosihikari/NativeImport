@@ -8,5 +8,5 @@ public sealed class EasyHook<TDelegate>(string rva, TDelegate func)
     {
     }
 
-    public override TDelegate HookedFunc { get; } = func;
+    public override TDelegate HookMethod { get; } = func;
 }

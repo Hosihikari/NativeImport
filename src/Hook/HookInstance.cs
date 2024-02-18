@@ -13,7 +13,7 @@ public sealed class HookInstance
         _original = original;
     }
 
-    public nint Original
+    public nint OriginalMethod
     {
         get
         {

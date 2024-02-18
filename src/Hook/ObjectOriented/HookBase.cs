@@ -6,19 +6,19 @@ namespace Hosihikari.NativeInterop.Hook.ObjectOriented;
 public abstract class HookBase<TDelegate> : IHook
     where TDelegate : Delegate
 {
-    private readonly unsafe void* _address;
-    private readonly Lazy<TDelegate> _hookedFuncInstance;
+    private readonly nint _address;
+    private readonly Lazy<TDelegate> _hookedMethodInstance;
 
-    private readonly Lazy<TDelegate> _originalFuncInstance;
+    private readonly Lazy<TDelegate> _originalMethodInstance;
 
     //alloc handle for delegate
     private GCHandle? _handle;
-    private unsafe void* _hookedFuncPointer;
+    private nint _hookedMethodPointer;
     private HookInstance? _instance;
-    private unsafe void* _orgIntPtr;
+    private nint _orgIntPtr;
 
-    protected HookBase(Delegate func)
-        : this(SymbolHelper.QuerySymbol(func))
+    protected HookBase(Delegate method)
+        : this(SymbolHelper.QuerySymbol(method))
     {
     }
 
@@ -30,73 +30,52 @@ public abstract class HookBase<TDelegate> : IHook
     protected HookBase(nint address)
         : this()
     {
-        unsafe
-        {
-            _address = address.ToPointer();
-        }
+        _address = address;
     }
 
     private HookBase()
     {
-        _originalFuncInstance = new(() =>
+        _originalMethodInstance = new(() => _orgIntPtr == nint.Zero
+            ? throw new NullReferenceException("OrgIntPtr is zero, has the hook installed?")
+            : Marshal.GetDelegateForFunctionPointer<TDelegate>(new(_orgIntPtr)));
+        _hookedMethodInstance = new(() =>
         {
-            unsafe
-            {
-                return _orgIntPtr is null
-                    ? throw new NullReferenceException("OrgIntPtr is zero, has the hook installed?")
-                    : Marshal.GetDelegateForFunctionPointer<TDelegate>(new(_orgIntPtr));
-            }
-        });
-        _hookedFuncInstance = new(() =>
-        {
-            TDelegate hookedFunc = HookedFunc;
-            return HookedFunc is null ? throw new NullReferenceException("HookedFunc") : hookedFunc;
+            TDelegate hookedMethod = HookMethod;
+            return HookMethod is null ? throw new NullReferenceException("HookedMethod") : hookedMethod;
         });
     }
 
-    protected TDelegate Original => _originalFuncInstance.Value;
-    public abstract TDelegate HookedFunc { get; }
+    protected TDelegate OriginalMethod => _originalMethodInstance.Value;
+    public abstract TDelegate HookMethod { get; }
 
-    public bool HasInstalled
-    {
-        get
-        {
-            unsafe
-            {
-                return _orgIntPtr is not null;
-            }
-        }
-    }
+    public bool HasInstalled => _orgIntPtr != nint.Zero;
 
     public void Install()
     {
         lock (this)
         {
-            unsafe
+            if (_address == nint.Zero)
             {
-                if (_address is null)
-                {
-                    throw new NullReferenceException("Address or symbol is null.");
-                }
+                throw new NullReferenceException("Address or symbol is null.");
+            }
 
-                if (_orgIntPtr is not null || _handle is not null)
-                {
-                    throw new HookAlreadyInstalledException();
-                }
+            if ((_orgIntPtr != nint.Zero) || _handle is not null)
+            {
+                throw new HookAlreadyInstalledException();
+            }
 
-                //save handle for delegate, prevent gc
-                _handle = GCHandle.Alloc(_hookedFuncInstance.Value);
-                //get pointer of delegate
-                _hookedFuncPointer = Marshal.GetFunctionPointerForDelegate(_hookedFuncInstance.Value).ToPointer();
-                //hook and check if success, otherwise throw exception
-                if (
-                    Function.Hook(_address, _hookedFuncPointer, out _orgIntPtr, out _instance)
-                    is not HookResult.Success
-                    and var errCode
-                )
-                {
-                    throw new HookInstalledFailedException(errCode);
-                }
+            //save handle for delegate, prevent gc
+            _handle = GCHandle.Alloc(_hookedMethodInstance.Value);
+            //get pointer of delegate
+            _hookedMethodPointer = Marshal.GetFunctionPointerForDelegate(_hookedMethodInstance.Value);
+            //hook and check if success, otherwise throw exception
+            if (
+                Function.Hook(_address, _hookedMethodPointer, out _orgIntPtr, out _instance)
+                is not HookResult.Success
+                and var errCode
+            )
+            {
+                throw new HookInstalledFailedException(errCode);
             }
         }
     }
@@ -118,25 +97,22 @@ public abstract class HookBase<TDelegate> : IHook
     {
         lock (this)
         {
-            unsafe
+            if ((_orgIntPtr == nint.Zero) || _instance is null)
             {
-                if (_orgIntPtr is null || _instance is null)
-                {
-                    throw new HookNotInstalledException();
-                }
-
-                //free delegate handle
-                _handle?.Free();
-                _handle = null;
-                //unhook and check if success, otherwise throw exception
-                if (_instance.Uninstall() is not HookResult.Success and var errCode)
-                {
-                    throw new HookUninstalledFailedException(errCode);
-                }
-
-                _orgIntPtr = null;
-                _instance = null;
+                throw new HookNotInstalledException();
             }
+
+            //free delegate handle
+            _handle?.Free();
+            _handle = null;
+            //unhook and check if success, otherwise throw exception
+            if (_instance.Uninstall() is not HookResult.Success and var errCode)
+            {
+                throw new HookUninstalledFailedException(errCode);
+            }
+
+            _orgIntPtr = nint.Zero;
+            _instance = null;
         }
     }
 
