@@ -1,4 +1,5 @@
 ﻿using Hosihikari.FastElfQuery;
+using Hosihikari.NativeInterop.Import;
 using Hosihikari.NativeInterop.Unmanaged.Attributes;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
@@ -70,6 +71,11 @@ public static class SymbolHelper
     /// <returns>IntPtr of function</returns>
     public static nint Dlsym(string symbolName)
     {
+        if (OperatingSystem.IsWindows())
+        {
+            return LibHook.ResolveSymbol(symbolName);
+        }
+
         return s_symbolTable!.Query(symbolName) + HandleHelper.MainHandleHandle;
     }
 

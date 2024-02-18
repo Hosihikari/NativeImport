@@ -19,18 +19,8 @@ public static class Function
         out HookInstance instance
     )
     {
-        if (address is null)
-        {
-            throw new NullReferenceException(nameof(address));
-        }
-
-        if (hook is null)
-        {
-            throw new NullReferenceException(nameof(hook));
-        }
-
-        HookResult result = LibHook.Hook(address, hook, out org);
-        instance = new(address, org);
+        HookResult result = Hook((nint)address, (nint)hook, out nint orgPtr, out instance);
+        org = orgPtr.ToPointer();
         return result;
     }
 
@@ -67,12 +57,19 @@ public static class Function
     /// <returns>hook result (0 if succeed)</returns>
     public static HookResult Hook(nint address, nint hook, out nint org, out HookInstance instance)
     {
-        unsafe
+        if (address == nint.Zero)
         {
-            HookResult result = Hook(address.ToPointer(), hook.ToPointer(), out void* orgPtr, out instance);
-            org = new(orgPtr);
-            return result;
+            throw new NullReferenceException(nameof(address));
         }
+
+        if (hook == nint.Zero)
+        {
+            throw new NullReferenceException(nameof(hook));
+        }
+
+        HookResult result = LibHook.Hook(address, hook, out org);
+        instance = new(address, org);
+        return result;
     }
 
     /// <summary>

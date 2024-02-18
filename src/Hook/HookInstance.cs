@@ -4,16 +4,16 @@ namespace Hosihikari.NativeInterop.Hook;
 
 public sealed class HookInstance
 {
-    private unsafe void* _address;
-    private unsafe void* _original;
+    private nint _address;
+    private nint _original;
 
-    internal unsafe HookInstance(void* address, void* original)
+    internal HookInstance(nint address, nint original)
     {
         _address = address;
         _original = original;
     }
 
-    public unsafe void* Original
+    public nint Original
     {
         get
         {
@@ -24,31 +24,25 @@ public sealed class HookInstance
 
     public HookResult Uninstall()
     {
-        unsafe
+        CheckActive();
+        HookResult result = LibHook.Unhook(_address);
+        if (result is not HookResult.Success)
         {
-            CheckActive();
-            HookResult result = LibHook.Unhook(_address);
-            if (result is not HookResult.Success)
-            {
-                return result;
-            }
-
-            _address = null;
-            _original = null;
             return result;
         }
+
+        _address = nint.Zero;
+        _original = nint.Zero;
+        return result;
     }
 
     private void CheckActive()
     {
-        unsafe
+        if ((_address == nint.Zero) || (_original == nint.Zero))
         {
-            if (_address is null || _original is null)
-            {
-                throw new InvalidOperationException(
-                    "This hook is not active. Maybe already uninstalled."
-                );
-            }
+            throw new InvalidOperationException(
+                "This hook is not active. Maybe already uninstalled."
+            );
         }
     }
 }
