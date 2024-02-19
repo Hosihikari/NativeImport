@@ -7,18 +7,18 @@ public abstract class HookBase<TDelegate> : IHook
     where TDelegate : Delegate
 {
     private readonly nint _address;
-    private readonly Lazy<TDelegate> _hookedMethodInstance;
+    private readonly Lazy<TDelegate> _hookDelegateInstance;
 
-    private readonly Lazy<TDelegate> _originalMethodInstance;
+    private readonly Lazy<TDelegate> _originalMethodGroupInstance;
 
     //alloc handle for delegate
     private GCHandle? _handle;
-    private nint _hookedMethodPointer;
+    private nint _hookedDelegatePointer;
     private HookInstance? _instance;
-    private nint _orgIntPtr;
+    private nint _originalMethodGroupPointer;
 
-    protected HookBase(Delegate method)
-        : this(SymbolHelper.QuerySymbol(method))
+    protected HookBase(Delegate methodGroup)
+        : this(SymbolHelper.QuerySymbol(methodGroup))
     {
     }
 
@@ -35,20 +35,17 @@ public abstract class HookBase<TDelegate> : IHook
 
     private HookBase()
     {
-        _originalMethodInstance = new(() => _orgIntPtr == nint.Zero
-            ? throw new NullReferenceException("OrgIntPtr is zero, has the hook installed?")
-            : Marshal.GetDelegateForFunctionPointer<TDelegate>(new(_orgIntPtr)));
-        _hookedMethodInstance = new(() =>
-        {
-            TDelegate hookedMethod = HookMethod;
-            return HookMethod is null ? throw new NullReferenceException("HookedMethod") : hookedMethod;
-        });
+        _originalMethodGroupInstance = new(() => _originalMethodGroupPointer == nint.Zero
+            ? throw new NullReferenceException("The original pointer is null. Has the hook been installed?")
+            : Marshal.GetDelegateForFunctionPointer<TDelegate>(_originalMethodGroupPointer));
+        _hookDelegateInstance = new(() => HookDelegate ?? throw new NullReferenceException("Hook method is null."));
     }
 
-    protected TDelegate OriginalMethod => _originalMethodInstance.Value;
-    public abstract TDelegate HookMethod { get; }
+    protected TDelegate Original => _originalMethodGroupInstance.Value;
 
-    public bool HasInstalled => _orgIntPtr != nint.Zero;
+    protected abstract TDelegate HookDelegate { get; }
+
+    public bool HasInstalled => _originalMethodGroupPointer != nint.Zero;
 
     public void Install()
     {
@@ -56,26 +53,21 @@ public abstract class HookBase<TDelegate> : IHook
         {
             if (_address == nint.Zero)
             {
-                throw new NullReferenceException("Address or symbol is null.");
+                throw new NullReferenceException("Address is null or symbol is invalid.");
             }
 
-            if ((_orgIntPtr != nint.Zero) || _handle is not null)
+            if ((_originalMethodGroupPointer != nint.Zero) || _instance is not null || _handle is not null)
             {
                 throw new HookAlreadyInstalledException();
             }
 
-            //save handle for delegate, prevent gc
-            _handle = GCHandle.Alloc(_hookedMethodInstance.Value);
-            //get pointer of delegate
-            _hookedMethodPointer = Marshal.GetFunctionPointerForDelegate(_hookedMethodInstance.Value);
-            //hook and check if success, otherwise throw exception
-            if (
-                Function.Hook(_address, _hookedMethodPointer, out _orgIntPtr, out _instance)
-                is not HookResult.Success
-                and var errCode
-            )
+            _handle = GCHandle.Alloc(_hookDelegateInstance.Value);
+            _hookedDelegatePointer = Marshal.GetFunctionPointerForDelegate(_hookDelegateInstance.Value);
+            HookResult result = Function.Hook(_address, _hookedDelegatePointer, out _originalMethodGroupPointer,
+                out _instance);
+            if (result is not HookResult.Success)
             {
-                throw new HookInstalledFailedException(errCode);
+                throw new HookInstalledFailedException(result);
             }
         }
     }
@@ -97,22 +89,21 @@ public abstract class HookBase<TDelegate> : IHook
     {
         lock (this)
         {
-            if ((_orgIntPtr == nint.Zero) || _instance is null)
+            if ((_originalMethodGroupPointer == nint.Zero) || _instance is null || _handle is null)
             {
                 throw new HookNotInstalledException();
             }
 
-            //free delegate handle
-            _handle?.Free();
-            _handle = null;
-            //unhook and check if success, otherwise throw exception
-            if (_instance.Uninstall() is not HookResult.Success and var errCode)
+            HookResult result = _instance.Uninstall();
+            if (result is not HookResult.Success)
             {
-                throw new HookUninstalledFailedException(errCode);
+                throw new HookUninstalledFailedException(result);
             }
 
-            _orgIntPtr = nint.Zero;
-            _instance = null;
+            _originalMethodGroupPointer = nint.Zero;
+            _instance = default;
+            _handle?.Free();
+            _handle = default;
         }
     }
 

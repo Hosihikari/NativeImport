@@ -10,8 +10,8 @@ public static class Function
     /// <param name="address">The address of the function.</param>
     /// <param name="hook">The hook function you created.</param>
     /// <param name="org">The original function.</param>
-    /// <param name="instance"> The instance of current hook </param>
-    /// <returns>hook result (0 if succeed)</returns>
+    /// <param name="instance">The instance of current hook.</param>
+    /// <returns>Result of hooking.</returns>
     public static unsafe HookResult Hook(
         void* address,
         void* hook,
@@ -30,8 +30,8 @@ public static class Function
     /// <param name="offset">The offset of the function.</param>
     /// <param name="hook">The hook function you created.</param>
     /// <param name="org">The original function.</param>
-    /// <param name="instance"></param>
-    /// <returns>hook result (0 if succeed)</returns>
+    /// <param name="instance">The instance of current hook.</param>
+    /// <returns>Result of hooking.</returns>
     public static unsafe HookResult Hook(
         int offset,
         void* hook,
@@ -53,8 +53,8 @@ public static class Function
     /// <param name="address">The address of the function.</param>
     /// <param name="hook">The hook function you created.</param>
     /// <param name="org">The original function.</param>
-    /// <param name="instance"></param>
-    /// <returns>hook result (0 if succeed)</returns>
+    /// <param name="instance">The instance of current hook.</param>
+    /// <returns>Result of hooking.</returns>
     public static HookResult Hook(nint address, nint hook, out nint org, out HookInstance instance)
     {
         if (address == nint.Zero)
@@ -78,8 +78,8 @@ public static class Function
     /// <param name="offset">The offset of the function.</param>
     /// <param name="hook">The hook function you created.</param>
     /// <param name="org">The original function.</param>
-    /// <param name="instance"></param>
-    /// <returns>hook result (0 if succeed)</returns>
+    /// <param name="instance">The instance of current hook.</param>
+    /// <returns>Result of hooking.</returns>
     public static HookResult Hook(int offset, nint hook, out nint org, out HookInstance instance)
     {
         return Hook(HandleHelper.MainHandleHandle + offset, hook, out org, out instance);

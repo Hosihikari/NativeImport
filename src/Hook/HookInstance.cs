@@ -13,18 +13,18 @@ public sealed class HookInstance
         _original = original;
     }
 
-    public nint OriginalMethod
+    public nint Original
     {
         get
         {
-            CheckActive();
+            ThrowIfNotActive();
             return _original;
         }
     }
 
     public HookResult Uninstall()
     {
-        CheckActive();
+        ThrowIfNotActive();
         HookResult result = LibHook.Unhook(_address);
         if (result is not HookResult.Success)
         {
@@ -36,7 +36,7 @@ public sealed class HookInstance
         return result;
     }
 
-    private void CheckActive()
+    private void ThrowIfNotActive()
     {
         if ((_address == nint.Zero) || (_original == nint.Zero))
         {

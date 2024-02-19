@@ -6,11 +6,11 @@ using System.Runtime.Versioning;
 
 namespace Hosihikari.NativeInterop.Unmanaged.STL;
 
+[SupportedOSPlatform("windows")]
 [PredefinedType(
     NativeTypeName = "basic_string<char, struct std::char_traits<char>, class std::allocator<char>>",
     NativeTypeNamespace = "std")]
 [StructLayout(LayoutKind.Sequential)]
-[SupportedOSPlatform("windows")]
 public unsafe struct StdString : IDisposable
 {
     private const int BufferSize = 16;
