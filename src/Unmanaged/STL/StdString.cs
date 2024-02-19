@@ -1,11 +1,8 @@
 ﻿using Hosihikari.NativeInterop.Generation;
-using Hosihikari.NativeInterop.Import;
-#if WINDOWS
 using Hosihikari.NativeInterop.Utils;
 using System.Runtime.CompilerServices;
-#endif
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.Marshalling;
+using System.Runtime.Versioning;
 
 namespace Hosihikari.NativeInterop.Unmanaged.STL;
 
@@ -13,9 +10,9 @@ namespace Hosihikari.NativeInterop.Unmanaged.STL;
     NativeTypeName = "basic_string<char, struct std::char_traits<char>, class std::allocator<char>>",
     NativeTypeNamespace = "std")]
 [StructLayout(LayoutKind.Sequential)]
+[SupportedOSPlatform("windows")]
 public unsafe struct StdString : IDisposable
 {
-#if WINDOWS
     private const int BufferSize = 16;
 
     [StructLayout(LayoutKind.Explicit)]
@@ -91,9 +88,8 @@ public unsafe struct StdString : IDisposable
     {
         fixed (byte* buf = storage.buffer)
         {
-            ulong oldSize = size;
             ulong oldCap = res;
-            ulong newSize = oldSize + size;
+            ulong newSize = size + size;
             ulong newCap = CalculateGrowth(newSize);
             byte* temp = stackalloc byte[BufferSize];
             byte* newStr = newCap > BufferSize ? (byte*)HeapAlloc.New(newCap) : temp;
@@ -103,17 +99,17 @@ public unsafe struct StdString : IDisposable
             constructed += index;
             Unsafe.CopyBlock(constructed, ptr, (uint)size * sizeof(byte));
             constructed += size;
-            Unsafe.CopyBlock(constructed, oldStr + index, (uint)(oldSize - index) * sizeof(byte));
+            Unsafe.CopyBlock(constructed, oldStr + index, (uint)(size - index) * sizeof(byte));
             if (newCap > BufferSize)
             {
                 storage.ptr = newStr;
-                size = newSize;
+                this.size = newSize;
                 res = newCap;
             }
             else
             {
                 Unsafe.CopyBlock(buf, newStr, (uint)newSize * sizeof(byte));
-                size = newSize;
+                this.size = newSize;
                 res = BufferSize;
             }
 
@@ -139,7 +135,7 @@ public unsafe struct StdString : IDisposable
                 HeapAlloc.Delete(buffer);
             }
 
-            size += size;
+            this.size += size;
         }
     }
 
@@ -246,346 +242,4 @@ public unsafe struct StdString : IDisposable
     {
         Clear();
     }
-#else
-    //0
-    public byte* data;
-
-    //8
-    public ulong length;
-
-    //16
-    public StdString* unknownStringPtr;
-
-    //24
-    public void* unknownPtr;
-
-    public void Dispose()
-    {
-        fixed (StdString* ptr = &this)
-        {
-            LibNative.std_string_destructor(ptr);
-        }
-    }
-
-    public StdString()
-    {
-        fixed (StdString* ptr = &this)
-        {
-            LibNative.std_string_placement_new_default(ptr);
-        }
-    }
-
-    public StdString(string str)
-    {
-        fixed (StdString* ptr = &this)
-        {
-            byte* data = Utf8StringMarshaller.ConvertToUnmanaged(str);
-            LibNative.std_string_placement_new_c_style_str(ptr, data);
-            Utf8StringMarshaller.Free(data);
-        }
-    }
-
-    public StdString(in StdString str)
-    {
-        fixed (StdString* ptr = &this)
-        fixed (StdString* right = &str)
-        {
-            LibNative.std_string_placement_new_copy(ptr, right);
-        }
-    }
-
-    public StdString(MoveHandle<StdString> str)
-    {
-        fixed (StdString* ptr = &this)
-        {
-            LibNative.std_string_placement_new_move(ptr, str.Target);
-        }
-    }
-
-    public ReadOnlySpan<byte> Data
-    {
-        get
-        {
-            fixed (StdString* ptr = &this)
-            {
-                byte* data = LibNative.std_string_data(ptr);
-                ulong len = LibNative.std_string_length(ptr);
-                if (data is null || (len <= 0))
-                {
-                    return ReadOnlySpan<byte>.Empty;
-                }
-
-                return new(ptr, (int)len);
-            }
-        }
-    }
-
-    public ulong Length
-    {
-        get
-        {
-            fixed (StdString* ptr = &this)
-            {
-                return LibNative.std_string_length(ptr);
-            }
-        }
-    }
-
-    public void Append(string str)
-    {
-        fixed (StdString* ptr = &this)
-        {
-            byte* data = Utf8StringMarshaller.ConvertToUnmanaged(str);
-            LibNative.std_string_append(ptr, data);
-            Utf8StringMarshaller.Free(data);
-        }
-    }
-
-    public void Append(in StdString str)
-    {
-        fixed (StdString* ptr = &this)
-        fixed (StdString* right = &str)
-        {
-            LibNative.std_string_append_std_string(ptr, right);
-        }
-    }
-
-    public void Clear()
-    {
-        fixed (StdString* ptr = &this)
-        {
-            LibNative.std_string_clear(ptr);
-        }
-    }
-
-    public override string ToString()
-    {
-        fixed (byte* data = Data)
-        {
-            return Utf8StringMarshaller.ConvertToManaged(data) ?? string.Empty;
-        }
-    }
-#endif
 }
-
-//public unsafe partial class StdString :
-//    IDisposable,
-//    ICppInstance<StdString>,
-//    IMoveableCppInstance<StdString>,
-//    ICopyableCppInstance<StdString>,
-//    IEnumerable<byte>
-//{
-//    [StructLayout(LayoutKind.Explicit, Size = 32)]
-//    public readonly struct StdStringFiller : INativeTypeFiller<StdStringFiller, StdString>
-//    {
-//        static StdStringFiller()
-//        {
-//            if (sizeof(StdStringFiller) != 32) throw new InvalidOperationException();
-//        }
-
-//        [FieldOffset(0)]
-//        private readonly long _alignment_member;
-
-//        public static void Destruct(StdStringFiller* @this) => DestructInstance(new(@this));
-
-//        public void Destruct()
-//        {
-//            fixed (StdStringFiller* ptr = &this)
-//            {
-//                Destruct(ptr);
-//            }
-//        }
-
-//        public static implicit operator StdString(in StdStringFiller filler)
-//        {
-//            fixed (void* ptr = &filler)
-//            {
-//                return new StdString(ptr);
-//            }
-//        }
-//    }
-
-//    public static ulong ClassSize => LibNative.std_string_get_class_size();
-
-//    public bool IsOwner { get => _isOwner; set => _isOwner = value; }
-//    public nint Pointer { get => new(_pointer); set => _pointer = value.ToPointer(); }
-
-//    public bool IsTempStackValue { get; set; }
-
-//    public static StdString ConstructInstance(nint ptr, bool owns, bool isTempStackValue) => new(ptr, owns, isTempStackValue);
-
-//    public static void DestructInstance(nint ptr) => LibNative.std_string_destructor(ptr.ToPointer());
-
-//    static object ICppInstanceNonGeneric.ConstructInstance(nint ptr, bool owns, bool isTempStackValue) => ConstructInstance(ptr, owns, isTempStackValue);
-
-//    public static StdString ConstructInstanceByCopy(StdString right) => new(right);
-//    public static StdString ConstructInstanceByMove(MoveHandle<StdString> right) => new(right);
-
-//    public static implicit operator nint(StdString str) => new(str._pointer);
-
-//    public static implicit operator void*(StdString str) => str._pointer;
-
-//    public void Destruct() => DestructInstance(this);
-
-//    protected virtual void Dispose(bool disposing)
-//    {
-//        if (disposedValue) return;
-//        if (_isOwner)
-//        {
-//            Destruct();
-//            if (IsTempStackValue is false) LibNative.operator_delete(this);
-//        }
-
-//        disposedValue = true;
-//    }
-
-//    ~StdString() => Dispose(disposing: false);
-
-//    public void Dispose()
-//    {
-//        Dispose(disposing: true);
-//        GC.SuppressFinalize(this);
-//    }
-
-//    private void* _pointer;
-//    //flag to determine if the pointer is created by this lib and should be deleted in the destructor
-//    private bool _isOwner;
-//    private bool disposedValue;
-
-//    public StdString()
-//    {
-//        _pointer = LibNative.std_string_new();
-//        _isOwner = true;
-//        IsTempStackValue = false;
-//    }
-
-//    public StdString(string str)
-//    {
-//        fixed (byte* data = StringUtils.StringToManagedUtf8(str))
-//        {
-//            _pointer = LibNative.std_string_new_str(data);
-//            _isOwner = true;
-//        }
-//    }
-
-//    public StdString(StdString str)
-//    {
-//        if (str._pointer is null)
-//        {
-//            throw new NullReferenceException(nameof(str._pointer));
-//        }
-
-//        _pointer = LibNative.operator_new(ClassSize);
-//        LibNative.std_string_placement_new_copy(_pointer, str);
-//    }
-
-//    public StdString(MoveHandle<StdString> str)
-//    {
-//        if (str.Target._pointer is null)
-//        {
-//            throw new NullReferenceException(nameof(str.Target._pointer));
-//        }
-
-//        _pointer = LibNative.operator_new(ClassSize);
-//        LibNative.std_string_placement_new_move(_pointer, str.Target);
-//    }
-
-//    public StdString(nint pointer, bool isOwner = false, bool isTempStackValue = true)
-//    {
-//        _pointer = pointer.ToPointer();
-//        _isOwner = isOwner;
-//        IsTempStackValue = isTempStackValue;
-//    }
-
-//    public StdString(void* pointer)
-//    {
-//        _pointer = pointer;
-//        _isOwner = false;
-//        IsTempStackValue = true;
-//    }
-
-//    public ReadOnlySpan<byte> Data
-//    {
-//        get
-//        {
-//            byte* ptr = LibNative.std_string_data(_pointer);
-//            ulong len = LibNative.std_string_length(_pointer);
-//            if (ptr is null || len <= 0)
-//            {
-//                return ReadOnlySpan<byte>.Empty;
-//            }
-//            return new ReadOnlySpan<byte>(ptr, (int)len);
-//        }
-//    }
-
-//    public ulong Length
-//    {
-//        get
-//        {
-//            return LibNative.std_string_length(_pointer);
-//        }
-//    }
-
-//    public void Append(string str)
-//    {
-//        fixed (byte* data = StringUtils.StringToManagedUtf8(str))
-//        {
-//            LibNative.std_string_append(_pointer, data);
-//        }
-//    }
-
-//    public void Append(StdString str)
-//    {
-//        LibNative.std_string_append_std_string(_pointer, str._pointer);
-//    }
-
-//    public void Clear()
-//    {
-//        LibNative.std_string_clear(_pointer);
-//    }
-
-//    public override string ToString()
-//    {
-//        return StringUtils.Utf8ToString(Data);
-//    }
-
-//    public IEnumerator<byte> GetEnumerator() => GetEnumerator();
-
-//    IEnumerator IEnumerable.GetEnumerator() => new StdStringEnumerator();
-
-//    private struct StdStringEnumerator : IEnumerator<byte>
-//    {
-//        private ulong currentOffset;
-//        private readonly ulong length;
-//        private readonly byte* data;
-
-//        public StdStringEnumerator(StdString str)
-//        {
-//            data = LibNative.std_string_data(str);
-//            currentOffset = ulong.MaxValue;
-//            length = str.Length;
-//        }
-
-//        public readonly byte Current
-//        {
-//            get
-//            {
-//                if (currentOffset >= length)
-//                {
-//                    throw new IndexOutOfRangeException();
-//                }
-//                return data[currentOffset];
-//            }
-//        }
-
-//        readonly object IEnumerator.Current => Current;
-
-//        public readonly void Dispose()
-//        {
-//        }
-
-//        public bool MoveNext() => ++currentOffset < length;
-
-//        public void Reset() => currentOffset = ulong.MaxValue;
-//    }
-//}
