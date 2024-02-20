@@ -1,6 +1,6 @@
 <Project>
     <PropertyGroup>
-        <Version>1.0.7</Version>
+        <Version>1.0.8</Version>
         <Authors>星光 Community</Authors>
         <Title>Native api importing</Title>
         <Description>Import APIs from native export that makes managed code to interoperate with native code</Description>
