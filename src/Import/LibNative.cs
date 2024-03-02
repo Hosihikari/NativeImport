@@ -4,7 +4,7 @@ namespace Hosihikari.NativeInterop.Import;
 
 internal static partial class LibNative
 {
-    private const string LibName = "layer";
+    private const string LibName = "export";
 
     #region memory
 
