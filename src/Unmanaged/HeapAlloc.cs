@@ -1,4 +1,4 @@
-﻿using Hosihikari.NativeInterop.Import;
+using Hosihikari.NativeInterop.Import;
 
 namespace Hosihikari.NativeInterop.Unmanaged;
 

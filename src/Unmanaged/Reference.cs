@@ -1,4 +1,4 @@
-﻿namespace Hosihikari.NativeInterop.Unmanaged;
+namespace Hosihikari.NativeInterop.Unmanaged;
 
 public readonly unsafe struct Reference<T> where T : class, ICppInstance<T>
 {

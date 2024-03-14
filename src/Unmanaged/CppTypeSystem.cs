@@ -1,4 +1,4 @@
-﻿using Hosihikari.NativeInterop.Unmanaged.Attributes;
+using Hosihikari.NativeInterop.Unmanaged.Attributes;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;

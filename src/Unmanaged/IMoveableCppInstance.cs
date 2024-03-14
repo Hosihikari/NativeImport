@@ -1,4 +1,4 @@
-﻿namespace Hosihikari.NativeInterop.Unmanaged;
+namespace Hosihikari.NativeInterop.Unmanaged;
 
 public interface IMoveableCppInstance<TSelf> where TSelf : class, ICppInstance<TSelf>
 {

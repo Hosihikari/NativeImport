@@ -1,4 +1,4 @@
-﻿namespace Hosihikari.NativeInterop.Unmanaged.Attributes;
+namespace Hosihikari.NativeInterop.Unmanaged.Attributes;
 
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Field)]
 public sealed class SymbolAttribute(string symbol) : Attribute

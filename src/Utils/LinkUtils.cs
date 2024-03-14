@@ -1,4 +1,4 @@
-﻿using Hosihikari.NativeInterop.Import;
+using Hosihikari.NativeInterop.Import;
 using System.Buffers;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;

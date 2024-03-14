@@ -1,4 +1,4 @@
-﻿using Hosihikari.FastElfQuery;
+using Hosihikari.FastElfQuery;
 using Hosihikari.NativeInterop.Import;
 using Hosihikari.NativeInterop.Unmanaged.Attributes;
 using System.Diagnostics.CodeAnalysis;

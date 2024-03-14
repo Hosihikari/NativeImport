@@ -1,4 +1,4 @@
-﻿namespace Hosihikari.NativeInterop.Unmanaged;
+namespace Hosihikari.NativeInterop.Unmanaged;
 
 internal interface ICopyableCppInstance<TSelf> where TSelf : class, ICppInstance<TSelf>
 {
