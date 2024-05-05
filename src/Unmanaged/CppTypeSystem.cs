@@ -52,10 +52,10 @@ public static class CppTypeSystem
             return T.ConstructInstance(@this.Pointer, false, true);
         }
 
-        T temp = T.ConstructInstance(@this.Pointer, @this.IsOwner, @this.IsTempStackValue);
+        T temp = T.ConstructInstance(@this.Pointer, @this.OwnsInstance, @this.OwnsMemory);
         @this.Pointer = 0;
-        @this.IsOwner = false;
-        @this.IsTempStackValue = false;
+        @this.OwnsInstance = false;
+        @this.OwnsMemory = false;
         @this.Dispose();
         return temp;
     }
@@ -106,7 +106,7 @@ public unsafe interface INativeVirtualMethodOverrideProvider<T, TVtable>
             list.Add((overrideAttr.VirtualMethodIndex, method.MethodHandle.GetFunctionPointer()));
         }
 
-        virtFptrs = list.ToArray();
+        virtFptrs = [.. list];
     }
 
     static VTableHandle? SetupVtable(ICppInstanceNonGeneric ins)

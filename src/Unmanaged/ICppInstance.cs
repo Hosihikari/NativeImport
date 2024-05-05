@@ -10,12 +10,12 @@ public interface ICppInstanceNonGeneric : IDisposable
     /// <summary>
     ///     noexcept
     /// </summary>
-    public bool IsOwner { get; set; }
+    public bool OwnsInstance { get; set; }
 
     /// <summary>
     ///     noexcept
     /// </summary>
-    public bool IsTempStackValue { get; set; }
+    public bool OwnsMemory { get; set; }
 
     /// <summary>
     ///     noexcept

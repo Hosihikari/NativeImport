@@ -51,7 +51,7 @@ public sealed unsafe class StdVector<T> :
     public StdVector(nint ptr, bool isOwner = false, bool isTempStackValue = true)
     {
         _pointer = (StdVector*)ptr.ToPointer();
-        IsOwner = isOwner;
+        OwnsInstance = isOwner;
     }
 
     public StdVector(StdVector<T> vec)
@@ -68,8 +68,8 @@ public sealed unsafe class StdVector<T> :
         Unsafe.CopyBlock(First, vec.First, (uint)size * (uint)sizeof(T));
         Last = First + size;
         End = Last + vec.Capacity();
-        IsOwner = true;
-        IsTempStackValue = false;
+        OwnsInstance = true;
+        OwnsMemory = false;
     }
 
     // public StdVector(MoveHandle<StdVector<T>> vec)
@@ -93,21 +93,21 @@ public sealed unsafe class StdVector<T> :
     public StdVector(nint pointer)
     {
         _pointer = (StdVector*)pointer.ToPointer();
-        IsOwner = false;
-        IsTempStackValue = true;
+        OwnsInstance = false;
+        OwnsMemory = true;
     }
 
     public StdVector(void* pointer)
     {
         _pointer = (StdVector*)pointer;
-        IsOwner = false;
-        IsTempStackValue = true;
+        OwnsInstance = false;
+        OwnsMemory = true;
     }
 
     public StdVector()
     {
         _pointer = (StdVector*)Marshal.AllocHGlobal(sizeof(StdVector)).ToPointer();
-        IsOwner = true;
+        OwnsInstance = true;
         Unsafe.InitBlock(_pointer, 0, (uint)sizeof(StdVector));
     }
 
@@ -148,8 +148,8 @@ public sealed unsafe class StdVector<T> :
     }
 
     public static ulong ClassSize => 24ul;
-    public bool IsOwner { get; set; }
-    public bool IsTempStackValue { get; set; }
+    public bool OwnsInstance { get; set; }
+    public bool OwnsMemory { get; set; }
 
     public nint Pointer
     {
@@ -226,7 +226,7 @@ public sealed unsafe class StdVector<T> :
             return;
         }
 
-        if (IsOwner)
+        if (OwnsInstance)
         {
             Destruct();
             LibNative.operator_delete(this);
