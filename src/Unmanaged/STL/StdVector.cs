@@ -7,8 +7,9 @@ using System.Text.RegularExpressions;
 
 namespace Hosihikari.NativeInterop.Unmanaged.STL;
 
+[PredefinedType(TypeName = "class std::vector", IgnoreTemplateArgs = true)]
 [StructLayout(LayoutKind.Sequential)]
-public unsafe partial struct StdVector : ITypeReferenceProvider
+public unsafe partial struct StdVector
 {
     public void* begin;
 
@@ -16,17 +17,6 @@ public unsafe partial struct StdVector : ITypeReferenceProvider
 
     //compressed_pair<pointer,allocator<T>>
     public void* end_cap;
-
-    [SupportedOSPlatform("windows")]
-    [GeneratedRegex("^class std::vector<(?<class_type>.*), class std::allocator<(\\k<class_type>)>>")]
-    private static partial Regex StdVectorRegex();
-
-    [SupportedOSPlatform("windows")] public static Regex Regex => StdVectorRegex();
-
-    public static Type Matched(Match match)
-    {
-        return typeof(StdVector);
-    }
 }
 
 public struct Unknown;
@@ -37,21 +27,22 @@ public sealed unsafe class StdVector<T> :
     ICopyableCppInstance<StdVector<T>>
     where T : unmanaged
 {
-    private static readonly bool IsFiller;
-    private static readonly delegate* managed<T*, void> DtorFptr;
+    private static readonly bool isFiller;
+    private static readonly delegate* managed<T*, void> dtorFptr;
     private static readonly ulong s_maxSize = ulong.MaxValue / (ulong)sizeof(T);
     private bool _disposedValue;
     private StdVector* _pointer;
 
     static StdVector()
     {
-        IsFiller = NativeTypeFillerHelper.TryGetDestructorFunctionPointer(out DtorFptr);
+        isFiller = NativeTypeFillerHelper.TryGetDestructorFunctionPointer(out dtorFptr);
     }
 
-    public StdVector(nint ptr, bool isOwner = false, bool isTempStackValue = true)
+    public StdVector(nint ptr, bool isOwner = false, bool ownsMemory = true)
     {
         _pointer = (StdVector*)ptr.ToPointer();
         OwnsInstance = isOwner;
+        OwnsMemory = ownsMemory;
     }
 
     public StdVector(StdVector<T> vec)
@@ -63,13 +54,13 @@ public sealed unsafe class StdVector<T> :
         }
 
         ulong size = vec.Size();
-        _pointer = HeapAlloc<StdVector>.New(default);
-        First = HeapAlloc<T>.NewArray(size);
+        _pointer = NativeAlloc<StdVector>.New(default);
+        First = NativeAlloc<T>.NewArray(size);
         Unsafe.CopyBlock(First, vec.First, (uint)size * (uint)sizeof(T));
         Last = First + size;
         End = Last + vec.Capacity();
         OwnsInstance = true;
-        OwnsMemory = false;
+        OwnsMemory = true;
     }
 
     // public StdVector(MoveHandle<StdVector<T>> vec)
@@ -94,14 +85,14 @@ public sealed unsafe class StdVector<T> :
     {
         _pointer = (StdVector*)pointer.ToPointer();
         OwnsInstance = false;
-        OwnsMemory = true;
+        OwnsMemory = false;
     }
 
     public StdVector(void* pointer)
     {
         _pointer = (StdVector*)pointer;
         OwnsInstance = false;
-        OwnsMemory = true;
+        OwnsMemory = false;
     }
 
     public StdVector()
@@ -157,15 +148,15 @@ public sealed unsafe class StdVector<T> :
         set => _pointer = (StdVector*)value.ToPointer();
     }
 
-    public static StdVector<T> ConstructInstance(nint ptr, bool owns, bool isTempStackValue)
+    public static StdVector<T> ConstructInstance(nint ptr, bool owns, bool ownsMemory)
     {
-        return new(ptr, owns, isTempStackValue);
+        return new(ptr, owns, ownsMemory);
     }
 
     public static void DestructInstance(nint ptr)
     {
         StdVector* p = (StdVector*)ptr.ToPointer();
-        if (IsFiller)
+        if (isFiller)
         {
             using StdVector<T> vector = new(ptr);
             ulong size = vector.Size();
@@ -173,7 +164,7 @@ public sealed unsafe class StdVector<T> :
             {
                 fixed (T* currentPtr = &vector[i])
                 {
-                    DtorFptr(currentPtr);
+                    dtorFptr(currentPtr);
                 }
             }
         }
@@ -188,9 +179,9 @@ public sealed unsafe class StdVector<T> :
         p->end_cap = null;
     }
 
-    static object ICppInstanceNonGeneric.ConstructInstance(nint ptr, bool owns, bool isTempStackValue)
+    static object ICppInstanceNonGeneric.ConstructInstance(nint ptr, bool owns, bool ownsMemory)
     {
-        return ConstructInstance(ptr, owns, isTempStackValue);
+        return ConstructInstance(ptr, owns, ownsMemory);
     }
 
     public static implicit operator nint(StdVector<T> vec)

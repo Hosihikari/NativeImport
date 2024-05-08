@@ -20,8 +20,7 @@ internal static class NativeTypeFillerHelper
             .Any(t => t.IsGenericType && (t.GetGenericTypeDefinition() == typeof(INativeTypeFiller<,>))))
         {
             result = (delegate* managed<TFiller*, void>)
-                type
-                    .GetMethod("Destruct", BindingFlags.Public | BindingFlags.Static, [typeof(TFiller*)])!
+                type.GetMethod("Destruct", BindingFlags.Public | BindingFlags.Static, [typeof(TFiller*)])!
                     .MethodHandle
                     .GetFunctionPointer()
                     .ToPointer();

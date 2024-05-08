@@ -7,9 +7,7 @@ using System.Runtime.Versioning;
 namespace Hosihikari.NativeInterop.Unmanaged.STL;
 
 [SupportedOSPlatform("windows")]
-[PredefinedType(
-    NativeTypeName = "basic_string<char, struct std::char_traits<char>, class std::allocator<char>>",
-    NativeTypeNamespace = "std")]
+[PredefinedType(TypeName = "basic_string<char, struct std::char_traits<char>, class std::allocator<char>>")]
 [StructLayout(LayoutKind.Sequential)]
 public unsafe struct StdString : IDisposable
 {
@@ -35,7 +33,7 @@ public unsafe struct StdString : IDisposable
     {
         if (res > BufferSize)
         {
-            HeapAlloc.Delete(storage.ptr);
+            NativeAlloc.Delete(storage.ptr);
         }
 
         size = res = 0;
@@ -55,7 +53,7 @@ public unsafe struct StdString : IDisposable
     {
         if (size > BufferSize)
         {
-            @this.storage.ptr = (byte*)HeapAlloc.New(size);
+            @this.storage.ptr = (byte*)NativeAlloc.New(size);
             Unsafe.CopyBlock(@this.storage.ptr, ptr, (uint)size * sizeof(byte));
         }
         else
@@ -92,7 +90,7 @@ public unsafe struct StdString : IDisposable
             ulong newSize = size + size;
             ulong newCap = CalculateGrowth(newSize);
             byte* temp = stackalloc byte[BufferSize];
-            byte* newStr = newCap > BufferSize ? (byte*)HeapAlloc.New(newCap) : temp;
+            byte* newStr = newCap > BufferSize ? (byte*)NativeAlloc.New(newCap) : temp;
             byte* oldStr = oldCap > BufferSize ? storage.ptr : buf;
             byte* constructed = newStr;
             Unsafe.CopyBlock(constructed, oldStr, (uint)index * sizeof(byte));
@@ -115,7 +113,7 @@ public unsafe struct StdString : IDisposable
 
             if (oldCap > BufferSize)
             {
-                HeapAlloc.Delete(oldStr);
+                NativeAlloc.Delete(oldStr);
             }
         }
     }
@@ -126,13 +124,13 @@ public unsafe struct StdString : IDisposable
         {
             byte* str = res > BufferSize ? storage.ptr : buf;
             byte* temp = stackalloc byte[BufferSize];
-            byte* buffer = size > BufferSize ? (byte*)HeapAlloc.New(size) : temp;
+            byte* buffer = size > BufferSize ? (byte*)NativeAlloc.New(size) : temp;
             Unsafe.CopyBlock(buffer, str + index, (uint)(size - index) * sizeof(byte));
             Unsafe.CopyBlock(str + index + size, buffer, (uint)size * sizeof(byte));
             Unsafe.CopyBlock(str + index, ptr, (uint)size * sizeof(byte));
             if (size > BufferSize)
             {
-                HeapAlloc.Delete(buffer);
+                NativeAlloc.Delete(buffer);
             }
 
             this.size += size;

@@ -5,26 +5,16 @@ using System.Text.RegularExpressions;
 
 namespace Hosihikari.NativeInterop.Unmanaged.STL;
 
+[PredefinedType(TypeName = "class std::shared_ptr", IgnoreTemplateArgs = true)]
 [StructLayout(LayoutKind.Sequential)]
-public unsafe partial struct StdSharedPtr : ITypeReferenceProvider
+public unsafe partial struct StdSharedPtr
 {
     public void* ptr;
     public void* ctr;
 
-    [SupportedOSPlatform("windows")]
-    [GeneratedRegex("^class std::shared_ptr<(?<class_type>.*)>")]
-    private static partial Regex StdSharedPtrRegex();
-
-    [SupportedOSPlatform("windows")] public static Regex Regex => StdSharedPtrRegex();
-
-    public static Type Matched(Match match)
-    {
-        return typeof(StdSharedPtr);
-    }
-
     public readonly void* Target<T>() where T : class, ICppInstance<T>
     {
-        return T.ConstructInstance((nint)ptr, false, true);
+        return T.ConstructInstance((nint)ptr, false, false);
     }
 }
 

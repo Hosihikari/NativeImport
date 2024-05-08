@@ -2,7 +2,7 @@ using Hosihikari.NativeInterop.Import;
 
 namespace Hosihikari.NativeInterop.Unmanaged;
 
-public readonly unsafe ref struct HeapAlloc<T> where T : unmanaged
+public readonly unsafe ref struct NativeAlloc<T> where T : unmanaged
 {
     private static readonly ulong s_size = (ulong)sizeof(T);
 
@@ -40,7 +40,7 @@ public readonly unsafe ref struct HeapAlloc<T> where T : unmanaged
         LibNative.operator_delete(ptr);
     }
 
-    public static void DeleteAsRef(ref T val)
+    public static void DeleteByRef(ref T val)
     {
         fixed (T* ptr = &val)
         {
@@ -49,7 +49,7 @@ public readonly unsafe ref struct HeapAlloc<T> where T : unmanaged
     }
 }
 
-public readonly unsafe ref struct HeapAlloc
+public readonly unsafe ref struct NativeAlloc
 {
     public static void* New(ulong size)
     {

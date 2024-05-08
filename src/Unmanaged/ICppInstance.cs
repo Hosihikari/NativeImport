@@ -24,13 +24,13 @@ public interface ICppInstanceNonGeneric : IDisposable
 
     public void Destruct();
     public static abstract void DestructInstance(nint ptr);
-    public static abstract object ConstructInstance(nint ptr, bool owns, bool isTempStackValue);
+    public static abstract object ConstructInstance(nint ptr, bool owns, bool ownsMemory);
 }
 
 public interface ICppInstance<TSelf> : ICppInstanceNonGeneric
     where TSelf : class, ICppInstance<TSelf>
 {
-    public new static abstract TSelf ConstructInstance(nint ptr, bool owns, bool isTempStackValue);
+    public new static abstract TSelf ConstructInstance(nint ptr, bool owns, bool ownsMemory);
 
     /// <summary>
     ///     noexcept
