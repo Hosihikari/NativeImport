@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace Hosihikari.NativeInterop.Unmanaged.STL;
 
-[PredefinedType(TypeName = "class basic_string_view<char, struct std::char_traits<char>>")]
+[PredefinedType(TypeName = "class std::basic_string_view<char, struct std::char_traits<char>>")]
 [StructLayout(LayoutKind.Sequential)]
 public unsafe struct StdStringView
 {

@@ -7,7 +7,7 @@ using System.Runtime.Versioning;
 namespace Hosihikari.NativeInterop.Unmanaged.STL;
 
 [SupportedOSPlatform("windows")]
-[PredefinedType(TypeName = "basic_string<char, struct std::char_traits<char>, class std::allocator<char>>")]
+[PredefinedType(TypeName = "class std::basic_string<char, struct std::char_traits<char>, class std::allocator<char>>")]
 [StructLayout(LayoutKind.Sequential)]
 public unsafe struct StdString : IDisposable
 {
