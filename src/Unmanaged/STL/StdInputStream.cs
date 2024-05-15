@@ -67,15 +67,15 @@ public sealed class StdInputStream
             byte* buffer = stackalloc byte[bufferSize];
             while (LibNative.std_istream_read(_pointer, buffer, bufferSize))
             {
-                writer.Write(new ReadOnlySpan<byte>(buffer, bufferSize).ToArray());
+                writer.Write([..new ReadOnlySpan<byte>(buffer, bufferSize)]);
                 NativeMemory.Clear(buffer, bufferSize);
             }
 
-            byte[] data = new ReadOnlySpan<byte>(buffer, bufferSize).ToArray();
+            byte[] data = [..new ReadOnlySpan<byte>(buffer, bufferSize)];
             int end = data.AsSpan().IndexOf((byte)0);
             if (end > 0)
             {
-                data = data.AsSpan(0, end).ToArray();
+                data = [..data.AsSpan(0, end)];
             }
 
             writer.Write(data);

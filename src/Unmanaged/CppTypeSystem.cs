@@ -1,6 +1,5 @@
 using Hosihikari.NativeInterop.Unmanaged.Attributes;
 using System.Reflection;
-using System.Runtime.InteropServices;
 
 namespace Hosihikari.NativeInterop.Unmanaged;
 
@@ -60,15 +59,17 @@ public static class CppTypeSystem
     }
 
     public static unsafe void* GetVurtualFunctionPointerByIndex(void* vtable, int index)
-        => (void*)*((long*)vtable + index);
+    {
+        return (void*)*((long*)vtable + index);
+    }
 }
 
 public interface IOverrideAttributeGeneric
 {
-    public abstract int Index { get; }
-    public abstract int Offset { get; }
+    public int Index { get; }
+    public int Offset { get; }
 
-    public abstract ulong VTableLength { get; }
+    public ulong VTableLength { get; }
 }
 
 [AttributeUsage(AttributeTargets.Method)]
@@ -80,56 +81,55 @@ public sealed class OverrideAttribute<TVtable>(int virtualMethodIndex) : Attribu
     public ulong VTableLength => TVtable.VtableLength;
 }
 
-public unsafe interface INativeVirtualMethodOverrideProvider<TSelf>
+public interface INativeVirtualMethodOverrideProvider<TSelf>
     where TSelf : class, ICppInstance<TSelf>, INativeVirtualMethodOverrideProvider<TSelf>
 {
-    private static readonly VtableHandle vtableHandle;
+    // private static readonly VtableHandle vtableHandle;
 
     static INativeVirtualMethodOverrideProvider()
     {
         throw new NotImplementedException();
 
-        var query = from method in typeof(TSelf).GetRuntimeMethods()
-                    let attrs = method.GetCustomAttributes(false).ToList()
-                    let overrideAttr = attrs.FirstOrDefault(a => a is IOverrideAttributeGeneric) as IOverrideAttributeGeneric
-                    let unmanagedCallersOnlyAttr = attrs.OfType<UnmanagedCallersOnlyAttribute>().FirstOrDefault()
-                    where overrideAttr != null && unmanagedCallersOnlyAttr != null
-                    group (method.MethodHandle.GetFunctionPointer(), overrideAttr.Index, overrideAttr.Offset, overrideAttr.VTableLength)
-                    by (overrideAttr.Offset, overrideAttr.VTableLength) into g
-                    select (g.Key, g.Select(t => (t.Item1, t.Index)).ToArray());
+        // var query = from method in typeof(TSelf).GetRuntimeMethods()
+        //             let attrs = method.GetCustomAttributes(false).ToList()
+        //             let overrideAttr = attrs.FirstOrDefault(a => a is IOverrideAttributeGeneric) as IOverrideAttributeGeneric
+        //             let unmanagedCallersOnlyAttr = attrs.OfType<UnmanagedCallersOnlyAttribute>().FirstOrDefault()
+        //             where overrideAttr != null && unmanagedCallersOnlyAttr != null
+        //             group (method.MethodHandle.GetFunctionPointer(), overrideAttr.Index, overrideAttr.Offset, overrideAttr.VTableLength)
+        //             by (overrideAttr.Offset, overrideAttr.VTableLength) into g
+        //             select (g.Key, g.Select(t => (t.Item1, t.Index)).ToArray());
 
-        vtableHandle = new(query);
+        // vtableHandle = new(query);
     }
 }
 
-internal unsafe struct VTable
-{
-    public int offset;
-    public void* ptr;
-}
+// internal unsafe struct VTable
+// {
+//     public int offset;
+//     public void* ptr;
+// }
 
-internal unsafe class VtableHandle
+internal class VtableHandle
 {
-    VTable[] vtables;
+    // VTable[] vtables;
 
     public VtableHandle(IEnumerable<((int offset, ulong vtableLength), (nint ptr, int index)[])> values)
     {
         throw new NotImplementedException();
 
-        List<VTable> list = [];
+        // List<VTable> list = [];
 
-        foreach (var ((offset, vtblLength), ptrs) in values)
-        {
-            var vtblPtr = NativeAlloc<nint>.NewArray(vtblLength);
-            for (int i = 0; i < (int)vtblLength; ++i)
-            {
-                vtblPtr[i] = ptrs[i].ptr;
-            }
-        }
+        // foreach (var ((offset, vtblLength), ptrs) in values)
+        // {
+        //     var vtblPtr = NativeAlloc<nint>.NewArray(vtblLength);
+        //     for (int i = 0; i < (int)vtblLength; ++i)
+        //     {
+        //         vtblPtr[i] = ptrs[i].ptr;
+        //     }
+        // }
     }
 
     ~VtableHandle()
     {
-
     }
 }

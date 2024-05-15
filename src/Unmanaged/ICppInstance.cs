@@ -30,7 +30,7 @@ public interface ICppInstanceNonGeneric : IDisposable
 public interface ICppInstance<TSelf> : ICppInstanceNonGeneric
     where TSelf : class, ICppInstance<TSelf>
 {
-    public new static abstract TSelf ConstructInstance(nint ptr, bool owns, bool ownsMemory);
+    public static new abstract TSelf ConstructInstance(nint ptr, bool owns, bool ownsMemory);
 
     /// <summary>
     ///     noexcept

@@ -12,6 +12,7 @@ public enum HookResult
 internal static partial class LibHook
 {
     private const string LibName = "dobby";
+    private const string DlsymLibName = "export";
 
     [LibraryImport(LibName, EntryPoint = "DobbyHook")]
     public static partial HookResult Hook(
@@ -24,6 +25,6 @@ internal static partial class LibHook
     public static partial HookResult Unhook(nint address);
 
     [SupportedOSPlatform("windows")]
-    [LibraryImport(LibName, EntryPoint = "resolveSymbol", StringMarshalling = StringMarshalling.Utf8)]
+    [LibraryImport(DlsymLibName, EntryPoint = "resolveSymbol", StringMarshalling = StringMarshalling.Utf8)]
     public static partial nint ResolveSymbol(string symbol);
 }

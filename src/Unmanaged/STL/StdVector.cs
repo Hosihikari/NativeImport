@@ -2,14 +2,12 @@ using Hosihikari.NativeInterop.Generation;
 using Hosihikari.NativeInterop.Import;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
-using System.Text.RegularExpressions;
 
 namespace Hosihikari.NativeInterop.Unmanaged.STL;
 
 [PredefinedType(TypeName = "class std::vector", IgnoreTemplateArgs = true)]
 [StructLayout(LayoutKind.Sequential)]
-public unsafe partial struct StdVector
+public unsafe struct StdVector
 {
     public void* begin;
 

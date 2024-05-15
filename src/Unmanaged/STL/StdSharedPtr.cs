@@ -1,13 +1,11 @@
 using Hosihikari.NativeInterop.Generation;
 using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
-using System.Text.RegularExpressions;
 
 namespace Hosihikari.NativeInterop.Unmanaged.STL;
 
 [PredefinedType(TypeName = "class std::shared_ptr", IgnoreTemplateArgs = true)]
 [StructLayout(LayoutKind.Sequential)]
-public unsafe partial struct StdSharedPtr
+public unsafe struct StdSharedPtr
 {
     public void* ptr;
     public void* ctr;

@@ -41,7 +41,7 @@ public static class SymbolHelper
             return true;
         }
 
-        if (!s_symbolTable!.TryQuery(symbolName, out int offset))
+        if (!s_symbolTable!.TryQuery(symbolName, out nint offset))
         {
             address = default;
             return false;
@@ -114,12 +114,12 @@ public static class SymbolHelper
 
     public static string QuerySymbol(PropertyInfo fptrProperty)
     {
-        if (TryQuerySymbol(out string? symbol, fptrProperty))
+        if (!TryQuerySymbol(out string? symbol, fptrProperty))
         {
-            return symbol;
+            throw new InvalidDataException();
         }
 
-        throw new InvalidDataException();
+        return symbol;
     }
 
     public static bool TryQuerySymbol([NotNullWhen(true)] out string? symbol, MethodInfo method)
@@ -152,11 +152,11 @@ public static class SymbolHelper
 
     public static string QuerySymbol(Delegate method)
     {
-        if (TryQuerySymbol(out string? symbol, method))
+        if (!TryQuerySymbol(out string? symbol, method))
         {
-            return symbol;
+            throw new InvalidDataException();
         }
 
-        throw new InvalidDataException();
+        return symbol;
     }
 }
