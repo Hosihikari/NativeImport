@@ -37,4 +37,10 @@ public readonly unsafe struct ValuePointer<T> where T : unmanaged
     {
         return ptr.Pointer;
     }
+
+    public bool IsNull
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _ptr is 0;
+    }
 }

@@ -1,10 +1,17 @@
 using Hosihikari.NativeInterop.Import;
+using System.Runtime.CompilerServices;
 
 namespace Hosihikari.NativeInterop.Unmanaged;
 
 public readonly unsafe ref struct NativeAlloc<T> where T : unmanaged
 {
     private static readonly ulong s_size = (ulong)sizeof(T);
+
+    public static T* New()
+    {
+        T* ptr = (T*)LibNative.operator_new(s_size);
+        return ptr;
+    }
 
     public static T* New(in T val)
     {
@@ -23,6 +30,11 @@ public readonly unsafe ref struct NativeAlloc<T> where T : unmanaged
         }
 
         return ptr;
+    }
+
+    public static ref T NewAsRef()
+    {
+        return ref *New();
     }
 
     public static ref T NewAsRef(in T val)

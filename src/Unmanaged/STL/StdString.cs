@@ -1,5 +1,6 @@
 using Hosihikari.NativeInterop.Generation;
 using Hosihikari.NativeInterop.Utils;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
@@ -9,7 +10,14 @@ namespace Hosihikari.NativeInterop.Unmanaged.STL;
 [SupportedOSPlatform("windows")]
 [PredefinedType(TypeName = "class std::basic_string<char, struct std::char_traits<char>, class std::allocator<char>>")]
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct StdString : IDisposable
+public unsafe struct StdString :
+    IDisposable,
+    ICppInstanceValueType<StdString>,
+    ICopyableCppInstanceValueType<StdString>,
+    IComparable<StdString>,
+    IComparisonOperators<StdString, StdString, bool>,
+    IEqualityOperators<StdString, StdString, bool>,
+    IAdditionOperators<StdString, StdString, StdString>
 {
     private const int BufferSize = 16;
 
@@ -203,10 +211,7 @@ public unsafe struct StdString : IDisposable
         }
     }
 
-    public void EmplaceBack(in StdString str)
-    {
-        Emplace(Size - 1, str);
-    }
+    public void EmplaceBack(in StdString str) => Emplace(Size - 1, str);
 
     public Span<byte> Data
     {
@@ -240,4 +245,44 @@ public unsafe struct StdString : IDisposable
     {
         Clear();
     }
+
+    public readonly StdString Copy() => new(this);
+
+    public ulong DoHash() => StdTypeTraits_Char._Hash_array_representation(C_str(), Size);
+
+    public byte* C_str()
+    {
+        fixed (byte* ptr = storage.buffer)
+        {
+            if (size <= 16)
+                return storage.ptr;
+            else
+                return ptr;
+        }
+    }
+
+    public int CompareTo(StdString other) => StdTypeTraits_Char._Traits_compare(C_str(), size, other.C_str(), other.Size);
+
+    public static bool operator >(StdString left, StdString right) => left.CompareTo(right) > 0;
+
+    public static bool operator >=(StdString left, StdString right) => left.CompareTo(right) >= 0;
+
+    public static bool operator <(StdString left, StdString right) => left.CompareTo(right) < 0;
+
+    public static bool operator <=(StdString left, StdString right) => left.CompareTo(right) <= 0;
+
+    public static bool operator ==(StdString left, StdString right) => left.CompareTo(right) == 0;
+
+    public static bool operator !=(StdString left, StdString right) => left.CompareTo(right) != 0;
+
+    public static StdString operator +(StdString left, StdString right)
+    {
+        var rlt = left.Copy();
+        rlt.EmplaceBack(right);
+        return rlt;
+    }
+
+    public readonly override bool Equals(object? obj) => obj is StdString str && this == str;
+
+    public override int GetHashCode() => (int)DoHash();
 }

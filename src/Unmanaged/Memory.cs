@@ -30,4 +30,17 @@ public static unsafe class Memory
     {
         return (void*)((nint)address + offset);
     }
+
+    public static int Memcmp(void* buf1, void* buf2, ulong count)
+    {
+        if (count is 0) return 0;
+
+        while (--count is not 0 && *(byte*)buf1 == *(byte*)buf2)
+        {
+            buf1 = (char*)buf1 + 1;
+            buf2 = (char*)buf2 + 1;
+        }
+
+        return *(byte*)buf1 - *(byte*)buf2;
+    }
 }
